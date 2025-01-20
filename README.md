@@ -9,8 +9,6 @@ By focusing on a **tight-knit student community**, the marketplace enables **qui
 
 Key features include a **buy-and-sell management system**, a **currency exchange request mechanism**, and a **user profile system** showcasing ratings, feedback, and active listings.  
 
-This project is part of the **Software Engineering** course in the Master of Science in Computer Science program.  
-
 ---
 
 ## Core Features  

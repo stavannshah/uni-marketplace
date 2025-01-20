@@ -11,6 +11,17 @@ Key features include a **buy-and-sell management system**, a **currency exchange
 
 ---
 
+## Contributors  
+- **Frontend Engineers**:  
+  - Stavan Shah  
+  - Priyanshu Mathur  
+- **Backend Engineers**:  
+  - Ahmed Ali  
+  - Vedant Upganlawar  
+
+---
+
+
 ## Core Features  
 
 ### 1. Secure Signup and Login  
@@ -30,16 +41,6 @@ Key features include a **buy-and-sell management system**, a **currency exchange
 ## Tech Stack  
 - **Frontend**: Angular  
 - **Backend**: Golang  
-
----
-
-## Contributors  
-- **Frontend Engineers**:  
-  - Stavan Shah  
-  - Priyanshu Mathur  
-- **Backend Engineers**:  
-  - Ahmed Ali  
-  - Vedant Upganlawar  
 
 ---
 

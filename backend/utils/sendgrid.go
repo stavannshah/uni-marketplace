@@ -8,6 +8,8 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
+const xyz = ""
+
 func GenerateOTP() string {
 	return strconv.Itoa(100000 + rand.Intn(900000)) // Generate 6-digit OTP
 }
@@ -19,7 +21,7 @@ func SendEmail(to string, otp string) error {
 	plainTextContent := "Your OTP is: " + otp
 	htmlContent := "<strong>Your OTP is: " + otp + "</strong>"
 	message := mail.NewSingleEmail(from, subject, toEmail, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(apiKey)
+	client := sendgrid.NewSendClient(xyz)
 	_, err := client.Send(message)
 	return err
 }

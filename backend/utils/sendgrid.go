@@ -8,7 +8,7 @@ import (
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-const apiKey = "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"
+const apiKey = ""
 
 func GenerateOTP() string {
 	return strconv.Itoa(100000 + rand.Intn(900000)) // Generate 6-digit OTP

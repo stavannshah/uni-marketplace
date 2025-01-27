@@ -1,27 +1,31 @@
 package utils
 
 import (
-	"math/rand"
-	"strconv"
+	"log"
+	"os"
 
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 )
 
-const apiKey = ""
+// SendEmail sends an email using SendGrid
+func SendEmail(toEmail, subject, body string) error {
+	from := mail.NewEmail("Uni Marketplace", "noreply@yourdomain.com")
+	to := mail.NewEmail("User", toEmail)
+	message := mail.NewSingleEmail(from, subject, to, body, body)
+	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
 
-func GenerateOTP() string {
-	return strconv.Itoa(100000 + rand.Intn(900000)) // Generate 6-digit OTP
-}
+	response, err := client.Send(message)
+	if err != nil {
+		log.Printf("Failed to send email: %v\n", err)
+		return err
+	}
 
-func SendEmail(to string, otp string) error {
-	from := mail.NewEmail("Your App", "noreply@yourapp.com")
-	subject := "Your OTP Code"
-	toEmail := mail.NewEmail("User", to)
-	plainTextContent := "Your OTP is: " + otp
-	htmlContent := "<strong>Your OTP is: " + otp + "</strong>"
-	message := mail.NewSingleEmail(from, subject, toEmail, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(apiKey)
-	_, err := client.Send(message)
-	return err
+	if response.StatusCode >= 200 && response.StatusCode < 300 {
+		log.Printf("Email sent successfully: %s\n", response.Body)
+		return nil
+	} else {
+		log.Printf("Failed to send email. Status Code: %d, Body: %s\n", response.StatusCode, response.Body)
+		return err
+	}
 }

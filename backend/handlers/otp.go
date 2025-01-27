@@ -1,32 +1,33 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"uni-marketplace/utils"
 
 	"github.com/gin-gonic/gin"
 )
 
-var otpStore = make(map[string]string) // email -> OTP
-
 func SendOTP(c *gin.Context) {
-	email := c.PostForm("email")
-	otp := utils.GenerateOTP()
-	otpStore[email] = otp
-	if err := utils.SendEmail(email, otp); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to send OTP"})
+	type Request struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+
+	var req Request
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email address"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "OTP sent successfully"})
-}
 
-func VerifyOTP(c *gin.Context) {
-	email := c.PostForm("email")
-	otp := c.PostForm("otp")
-	if otpStore[email] == otp {
-		delete(otpStore, email) // Clear OTP after verification
-		c.JSON(http.StatusOK, gin.H{"message": "Login successful"})
-	} else {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid OTP"})
+	otp := "123456" // Generate an actual OTP here
+	body := "Your OTP is: " + otp
+
+	err := utils.SendEmail(req.Email, "Your OTP", body)
+	if err != nil {
+		log.Printf("Error sending OTP: %v\n", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP"})
+		return
 	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "OTP sent successfully"})
 }

@@ -6,10 +6,22 @@ const OTPPage = ({ onLogin }) => {
   const [otp, setOtp] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState(null);
   const [step, setStep] = useState(1);
+  const [emailError, setEmailError] = useState("");
 
   const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
+  const validateEmail = (email) => {
+    // Check if the email ends with @ufl.edu
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@ufl\.edu$/;
+    return emailRegex.test(email);
+  };
+
   const sendOtp = async () => {
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid @ufl.edu email address.");
+      return;
+    }
+
     const newOtp = generateOtp();
     setGeneratedOtp(newOtp);
 
@@ -50,10 +62,14 @@ const OTPPage = ({ onLogin }) => {
           <input
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailError(""); // Clear error when user types
+            }}
             placeholder="Enter your email"
             className="w-full p-2 mt-2 border rounded"
           />
+          {emailError && <p className="text-red-500 mt-2">{emailError}</p>}
           <button
             onClick={sendOtp}
             className="w-full px-4 py-2 mt-4 text-white bg-blue-500 rounded"

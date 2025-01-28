@@ -3,7 +3,7 @@
 # University Student Marketplace
 
 ## Project Description  
-The **University Student Marketplace** is a secure web platform built with **Angular** and **Golang**, exclusively for university students to buy, sell, and interact within their campus community. This platform fosters **trust and security** by verifying users through university email authentication (via OTP) and ensures exclusivity for students.  
+The **University Student Marketplace** is a secure web platform built with **ReactJS** and **Golang**, exclusively for university students to buy, sell, and interact within their campus community. This platform fosters **trust and security** by verifying users through university email authentication (via OTP) and ensures exclusivity for students.  
 
 By focusing on a **tight-knit student community**, the marketplace enables **quicker buy-and-sell transactions**, as students are constantly on the move and in need of efficient exchanges. Additionally, being part of the same community promotes **competitive pricing**, making items more affordable.  
 

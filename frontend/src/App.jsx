@@ -56,10 +56,36 @@ const OTPPage = ({ onLogin }) => {
     }
   };
 
-  const verifyOtp = () => {
+  const verifyOtp = async () => {
     if (otp === generatedOtp) {
-      localStorage.setItem("isLoggedIn", "true");
-      onLogin();
+      const user = {
+        email: email,
+        last_login: new Date().toISOString(),
+      };
+      console.log("Sending user data to backend:", user); // Debug log
+  
+      try {
+        const response = await fetch("http://localhost:8080/api/saveUser", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(user),
+        });
+  
+        console.log("Backend response status:", response.status); // Debug log
+        if (response.ok) {
+          localStorage.setItem("isLoggedIn", "true");
+          onLogin();
+        } else {
+          const errorData = await response.json(); // Parse error response
+          console.error("Backend error:", errorData); // Debug log
+          alert("Failed to save user details.");
+        }
+      } catch (error) {
+        console.error("Error saving user details:", error);
+        alert("Failed to save user details.");
+      }
     } else {
       alert("Invalid OTP. Please try again.");
     }

@@ -1,0 +1,8 @@
+cmd
+npm install
+npm run dev
+
+terminal
+go mod init uni-marketplace-backend
+go run main.go
+

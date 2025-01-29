@@ -1,5 +1,17 @@
 import React, { useState } from "react";
 import emailjs from "emailjs-com";
+import {
+  Container,
+  Typography,
+  TextField,
+  Button,
+  Box,
+  AppBar,
+  Toolbar,
+  Tabs,
+  Tab,
+} from "@mui/material";
+import { Logout } from "@mui/icons-material";
 
 const OTPPage = ({ onLogin }) => {
   const [email, setEmail] = useState("");
@@ -11,7 +23,6 @@ const OTPPage = ({ onLogin }) => {
   const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
   const validateEmail = (email) => {
-    // Check if the email ends with @ufl.edu
     const emailRegex = /^[a-zA-Z0-9._%+-]+@ufl\.edu$/;
     return emailRegex.test(email);
   };
@@ -32,10 +43,10 @@ const OTPPage = ({ onLogin }) => {
 
     try {
       await emailjs.send(
-        import.meta.env.VITE_EMAIL_SERVICE_ID, // Replace with your EmailJS Service ID
-        import.meta.env.VITE_EMAIL_TEMPLATE_ID, // Replace with your EmailJS Template ID
+        import.meta.env.VITE_EMAIL_SERVICE_ID,
+        import.meta.env.VITE_EMAIL_TEMPLATE_ID,
         templateParams,
-        import.meta.env.VITE_EMAIL_USER_ID // Replace with your EmailJS User ID
+        import.meta.env.VITE_EMAIL_USER_ID
       );
       alert("OTP sent to your email!");
       setStep(2);
@@ -55,49 +66,60 @@ const OTPPage = ({ onLogin }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen p-4">
+    <Container maxWidth="sm" sx={{ mt: 8 }}>
       {step === 1 && (
-        <div className="w-full max-w-md p-4 border rounded shadow">
-          <h1 className="text-2xl font-bold">Enter Your Email</h1>
-          <input
-            type="email"
+        <Box sx={{ p: 4, boxShadow: 3, borderRadius: 2 }}>
+          <Typography variant="h4" align="center" gutterBottom>
+            Welcome Back!
+          </Typography>
+          <TextField
+            fullWidth
+            label="Enter your @ufl.edu email"
+            variant="outlined"
             value={email}
             onChange={(e) => {
               setEmail(e.target.value);
-              setEmailError(""); // Clear error when user types
+              setEmailError("");
             }}
-            placeholder="Enter your email"
-            className="w-full p-2 mt-2 border rounded"
+            error={!!emailError}
+            helperText={emailError}
+            sx={{ mb: 2 }}
           />
-          {emailError && <p className="text-red-500 mt-2">{emailError}</p>}
-          <button
+          <Button
+            fullWidth
+            variant="contained"
             onClick={sendOtp}
-            className="w-full px-4 py-2 mt-4 text-white bg-blue-500 rounded"
+            sx={{ bgcolor: "primary.main", "&:hover": { bgcolor: "primary.dark" } }}
           >
             Send OTP
-          </button>
-        </div>
+          </Button>
+        </Box>
       )}
 
       {step === 2 && (
-        <div className="w-full max-w-md p-4 border rounded shadow">
-          <h1 className="text-2xl font-bold">Verify OTP</h1>
-          <input
-            type="text"
+        <Box sx={{ p: 4, boxShadow: 3, borderRadius: 2 }}>
+          <Typography variant="h4" align="center" gutterBottom>
+            Verify OTP
+          </Typography>
+          <TextField
+            fullWidth
+            label="Enter the OTP"
+            variant="outlined"
             value={otp}
             onChange={(e) => setOtp(e.target.value)}
-            placeholder="Enter the OTP"
-            className="w-full p-2 mt-2 border rounded"
+            sx={{ mb: 2 }}
           />
-          <button
+          <Button
+            fullWidth
+            variant="contained"
             onClick={verifyOtp}
-            className="w-full px-4 py-2 mt-4 text-white bg-green-500 rounded"
+            sx={{ bgcolor: "success.main", "&:hover": { bgcolor: "success.dark" } }}
           >
             Verify and Login
-          </button>
-        </div>
+          </Button>
+        </Box>
       )}
-    </div>
+    </Container>
   );
 };
 
@@ -110,31 +132,32 @@ const MainWebsite = () => {
   };
 
   return (
-    <div className="h-screen">
-      <nav className="flex justify-between p-4 bg-gray-800 text-white">
-        <div>
-          <button onClick={() => setTab("Home")} className="px-4 py-2">
-            Home
-          </button>
-          <button onClick={() => setTab("Listings")} className="px-4 py-2">
-            Listings
-          </button>
-          <button onClick={() => setTab("Exchange Requests")} className="px-4 py-2">
-            Exchange Requests
-          </button>
-          <button onClick={() => setTab("Your Profile")} className="px-4 py-2">
-            Your Profile
-          </button>
-        </div>
-        <button onClick={logout} className="px-4 py-2 bg-red-500 rounded">
-          Logout
-        </button>
-      </nav>
-      <div className="p-4">
-        <h1 className="text-3xl font-bold">{tab}</h1>
-        <p className="mt-2">Welcome to the {tab} page!</p>
-      </div>
-    </div>
+    <Box>
+      <AppBar position="static">
+        <Toolbar>
+          <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)}>
+            <Tab label="Home" value="Home" />
+            <Tab label="Item Listing" value="Item Listing" />
+            <Tab label="Currency Exchange Listing" value="Currency Exchange Listing" />
+            <Tab label="Sub Leasing Listing" value="Sub Leasing Listing" />
+          </Tabs>
+          <Button
+            color="inherit"
+            startIcon={<Logout />}
+            onClick={logout}
+            sx={{ marginLeft: "auto" }}
+          >
+            Logout
+          </Button>
+        </Toolbar>
+      </AppBar>
+      <Container sx={{ mt: 4 }}>
+        <Typography variant="h3" gutterBottom>
+          {tab}
+        </Typography>
+        <Typography variant="body1">Welcome to the {tab} page!</Typography>
+      </Container>
+    </Box>
   );
 };
 

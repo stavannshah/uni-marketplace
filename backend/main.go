@@ -2,13 +2,16 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -22,7 +25,20 @@ type User struct {
 }
 
 func connectToMongoDB() {
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+	// Load environment variables from .env file
+	err_0 := godotenv.Load()
+	if err_0 != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// Get MongoDB credentials from environment variables
+	username := os.Getenv("MONGODB_USERNAME")
+	password := os.Getenv("MONGODB_PASSWORD")
+
+	//mongodb+srv://stavanshah13:<db_password>@unimarketplace.j4fsn.mongodb.net/?retryWrites=true&w=majority&appName=unimarketplace
+	// Construct the connection string
+	connectionString := fmt.Sprintf("mongodb+srv://%s:%s@unimarketplace.j4fsn.mongodb.net/?retryWrites=true&w=majority&appName=unimarketplace", username, password)
+	clientOptions := options.Client().ApplyURI(connectionString).SetTLSConfig(&tls.Config{})
 	var err error
 	client, err = mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
@@ -57,7 +73,7 @@ func main() {
 
 	// Enable CORS
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5174"}, // Allow frontend origin
+		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:5174", "http://localhost:5175"}, // Allow frontend origin
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,

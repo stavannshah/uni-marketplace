@@ -6,3 +6,9 @@ terminal
 go mod init uni-marketplace-backend
 go run main.go
 
+go mod init uni-marketplace-backend
+go get go.mongodb.org/mongo-driver/mongo
+go get go.mongodb.org/mongo-driver/mongo/options
+go get github.com/gorilla/mux
+go get github.com/rs/cors
+

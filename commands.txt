@@ -12,3 +12,9 @@ go get go.mongodb.org/mongo-driver/mongo/options
 go get github.com/gorilla/mux
 go get github.com/rs/cors
 
+Git Commmands:
+To push to your own branch
+git add .
+git commit -m
+git commit firstname_lastname
+

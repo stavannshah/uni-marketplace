@@ -93,7 +93,8 @@ const OTPPage = ({ onLogin }) => {
 
   return (
     <Container maxWidth="sm" sx={{ mt: 8 }}>
-      {step === 1 && (
+      {step === 1 && 
+      (
         <Box sx={{ p: 4, boxShadow: 3, borderRadius: 2 }}>
           <Typography variant="h4" align="center" gutterBottom>
             Welcome Back!

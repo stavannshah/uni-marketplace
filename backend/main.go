@@ -13,6 +13,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -65,11 +66,44 @@ func saveUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
+func getUsers(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	collection := client.Database("uni_marketplace").Collection("users")
+
+	// Retrieve all users
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to retrieve users"})
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var users []User
+	for cursor.Next(context.TODO()) {
+		var user User
+		if err := cursor.Decode(&user); err != nil {
+			log.Fatal(err)
+		}
+		users = append(users, user)
+	}
+
+	// Response JSON
+	response := map[string]interface{}{
+		"user_count": len(users),
+		"users":      users,
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
 func main() {
 	connectToMongoDB()
 	r := mux.NewRouter()
 
 	r.HandleFunc("/api/saveUser", saveUser).Methods("POST")
+	r.HandleFunc("/api/users", getUsers).Methods("GET")
 
 	// Enable CORS
 	c := cors.New(cors.Options{

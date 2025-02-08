@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import emailjs from "emailjs-com";
 import {
   Container,
@@ -10,9 +10,17 @@ import {
   Toolbar,
   Tabs,
   Tab,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  Paper,
+  CircularProgress,
 } from "@mui/material";
 import { Logout } from "@mui/icons-material";
 
+// OTPPage component as is
 const OTPPage = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -150,6 +158,58 @@ const OTPPage = ({ onLogin }) => {
   );
 };
 
+// UsersList component to fetch and display user list
+const UsersList = () => {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("http://localhost:8080/api/users")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("Fetched users:", data);
+        setUsers(Array.isArray(data.users) ? data.users : []);
+      })
+      .catch((err) => console.error("Error fetching users:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  return (
+    <Paper sx={{ p: 3, boxShadow: 3, borderRadius: 2 }}>
+      <Typography variant="h5" gutterBottom align="center">
+        Registered Users
+      </Typography>
+      {loading ? (
+        <Box sx={{ display: "flex", justifyContent: "center", p: 2 }}>
+          <CircularProgress />
+        </Box>
+      ) : users.length === 0 ? (
+        <Typography align="center">No users found.</Typography>
+      ) : (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ fontWeight: "bold" }}>Email</TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>Last Login</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {users.map((user, index) => (
+              <TableRow key={index}>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>
+                  {user.last_login ? new Date(user.last_login).toLocaleString() : "Never"}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+    </Paper>
+  );
+};
+
+// MainWebsite component with tabs and users list in the "Home" tab
 const MainWebsite = () => {
   const [tab, setTab] = useState("Home");
 
@@ -182,12 +242,14 @@ const MainWebsite = () => {
         <Typography variant="h3" gutterBottom>
           {tab}
         </Typography>
+        {tab === "Home" && <UsersList />}
         <Typography variant="body1">Welcome to the {tab} page!</Typography>
       </Container>
     </Box>
   );
 };
 
+// App component to manage login state
 const App = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem("isLoggedIn") === "true");
 

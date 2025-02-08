@@ -17,7 +17,7 @@ Git Commmands:
 To push to your own branch
 git add .
 git commit -m
-git commit firstname_lastname
+git push firstname_lastname
 
 To push to main
 git checkout firstname_lastname

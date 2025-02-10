@@ -39,7 +39,7 @@ Key features include a **buy-and-sell management system**, a **currency exchange
 ---
 
 ## Tech Stack  
-- **Frontend**: Angular  
+- **Frontend**: ReactJs  
 - **Backend**: Golang  
 
 ---

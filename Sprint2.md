@@ -8,7 +8,7 @@
 - **Frontend Engineers**: Stavan Shah, Priyanshu Mathur  
 - **Backend Engineers**: Ahmed Ali Syed, Vedant Upganlawar  
 
-**Frontend video link**: [[Frontend Video_Sprint2](https://drive.google.com/file/d/1_oECT4INKy9If5KP-gQ99N3KU_asV4T5/view?usp=sharing)]  
+**Frontend video link**: [[Frontend Video_Sprint2](https://drive.google.com/file/d/1AzSMkqN4paYUQ_Hi_W7GxQWnu8k2gwHl/view?usp=sharing)]  
 **Backend video link**: [[Backend Video_Sprint2](https://drive.google.com/file/d/1Oy8AqudhT0qS8MjzdHtjj3uXFGW04rc3/view?usp=sharing)]  
 **Github Link**: [https://github.com/stavannshah/uni-marketplace/edit/main/Sprint2.md]  
 

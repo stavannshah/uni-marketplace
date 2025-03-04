@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import { Logout } from "@mui/icons-material";
 
-// OTPPage component as is
+// OTPPage component as it is
 const OTPPage = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");

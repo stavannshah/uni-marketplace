@@ -40,6 +40,7 @@
 
 5. **Document Backend API**  
    - **Story**: As backend developers, we deveoped a detailed documentation of the API so that future development and integration are easier.  
+   - **API Endpoint Documentation**: [[API Documentation](https://documenter.getpostman.com/view/42795112/2sAYdiopTw)]
    - **Acceptance Criteria**:  
      - API documentation includes request/response structures.  
      - API endpoints are clearly defined in below "API Endpoints Documentation" section.
@@ -79,13 +80,8 @@
 - **GET /api/subleasing/requests**  
   Retrieves all subleasing requests from the database.
 
-### Server Details
-- The server runs on port **8080**.
-- Uses **MongoDB** as the database.
-- Implements **CORS** to allow requests from `http://localhost:5173` and `http://localhost:5174`.
 
-
-# Test Cases for `main_test.go`
+# Test Cases for Backend
 
 ## 1. `TestSaveUser`
 ### Description:

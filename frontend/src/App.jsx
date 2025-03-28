@@ -31,7 +31,7 @@ import { Logout, AccountCircle } from "@mui/icons-material";
 import { saveAs } from "file-saver";
 
 
-// OTPPage component as is
+// OTPPage component as it is
 const OTPPage = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "react-scripts test"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -31,6 +32,10 @@
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
-    "vite": "^6.0.5"
+    "vite": "^6.0.5",
+    "@testing-library/react": "^latest",
+    "@testing-library/jest-dom": "^latest",
+    "jest": "^latest",
+    "react-scripts": "^latest"
   }
 }

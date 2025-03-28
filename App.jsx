@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import emailjs from "emailjs-com";
-import ItemListing from "./ItemListing"; 
-import './App.css';
 import {
   Container,
   Typography,
@@ -28,8 +26,6 @@ import {
   DialogActions
 } from "@mui/material";
 import { Logout, AccountCircle } from "@mui/icons-material";
-import { saveAs } from "file-saver";
-
 
 // OTPPage component as is
 const OTPPage = ({ onLogin }) => {
@@ -220,55 +216,77 @@ const UsersList = () => {
   );
 };
 
-const UserProfilePopup = ({ open, handleClose, saveProfile, profile }) => {
-  const [formData, setFormData] = useState(profile);
+// User Profile Popup Component
+const UserProfilePopup = () => {
+  const [open, setOpen] = useState(false);
+  const [userData, setUserData] = useState({
+    name: "",
+    preferences: "",
+    preferred_email: "",
+    city: "",
+    state: "",
+    country: "",
+  });
 
+  const handleDialogOpen = () => setOpen(true);
+  const handleDialogClose = () => setOpen(false);
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setUserData({ ...userData, [e.target.name]: e.target.value });
   };
-
-  const handleSave = () => {
-    saveProfile(formData);
-    handleClose();
+  const handleSubmit = async () => {
+    const payload = {
+      ...userData,
+      preferences: userData.preferences.split(",").map((pref) => pref.trim()),
+      location: {
+        city: userData.city,
+        state: userData.state,
+        country: userData.country,
+      },
+    };
+    try {
+      const response = await fetch("http://localhost:8080/api/saveUserProfile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (response.ok) {
+        alert("Profile saved successfully!");
+        handleDialogClose();
+      } else {
+        alert("Failed to save profile.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("An error occurred while saving profile.");
+    }
   };
-
   return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>Edit Profile</DialogTitle>
-      <DialogContent>
-        <TextField fullWidth label="Name" name="name" value={formData.name} onChange={handleChange} sx={{ mb: 2 }} />
-        <TextField fullWidth label="Preferred Email" name="preferred_email" value={formData.preferred_email} onChange={handleChange} sx={{ mb: 2 }} />
-        <TextField fullWidth label="Preferences" name="preferences" value={formData.preferences} onChange={handleChange} sx={{ mb: 2 }} />
-        <TextField fullWidth label="Location" name="location" value={formData.location} onChange={handleChange} sx={{ mb: 2 }} />
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
-        <Button variant="contained" onClick={handleSave}>Save</Button>
-      </DialogActions>
-    </Dialog>
+    <div>
+      <IconButton color="inherit" onClick={handleDialogOpen} sx={{ marginLeft: 2 }}>
+        <AccountCircle />
+      </IconButton>
+      <Dialog open={open} onClose={handleDialogClose}>
+        <DialogTitle>Update Profile</DialogTitle>
+        <DialogContent>
+          <TextField fullWidth margin="dense" label="Name" name="name" onChange={handleChange} />
+          <TextField fullWidth margin="dense" label="Preferred Email" name="preferred_email" onChange={handleChange} />
+          <TextField fullWidth margin="dense" label="Preferences (comma-separated)" name="preferences" onChange={handleChange} />
+          <TextField fullWidth margin="dense" label="City" name="city" onChange={handleChange} />
+          <TextField fullWidth margin="dense" label="State" name="state" onChange={handleChange} />
+          <TextField fullWidth margin="dense" label="Country" name="country" onChange={handleChange} />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Cancel</Button>
+          <Button variant="contained" onClick={handleSubmit}>Save</Button>
+        </DialogActions>
+      </Dialog>
+    </div>
   );
 };
 
 // MainWebsite component with tabs and users list in the "Home" tab
 const MainWebsite = () => {
   const [tab, setTab] = useState("Home");
-
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState({ name: "", preferred_email: "", preferences: "", location: "" });
-
-  useEffect(() => {
-    fetch("userProfile.json")
-      .then((response) => response.json())
-      .then((data) => setUserProfile(data))
-      .catch((error) => console.error("Error loading profile:", error));
-  }, []);
-
-  const saveProfile = (profile) => {
-    setUserProfile(profile);
-    const blob = new Blob([JSON.stringify(profile, null, 2)], { type: "application/json" });
-    saveAs(blob, "userProfile.json");
-  };
 
   const logout = () => {
     localStorage.removeItem("isLoggedIn");
@@ -285,9 +303,7 @@ const MainWebsite = () => {
             <Tab label="Currency Exchange Listing" value="Currency Exchange Listing" />
             <Tab label="Sub Leasing Listing" value="Sub Leasing Listing" />
           </Tabs>
-          <IconButton color="inherit" onClick={() => setProfileOpen(true)} sx={{ marginLeft: "auto" }}>
-            <AccountCircle />
-          </IconButton>
+          <UserProfilePopup />
           <Button
             color="inherit"
             startIcon={<Logout />}
@@ -303,10 +319,8 @@ const MainWebsite = () => {
           {tab}
         </Typography>
         {tab === "Home" && <UsersList />}
-        {tab === "Item Listing" && <ItemListing />}
         <Typography variant="body1">Welcome to the {tab} page!</Typography>
       </Container>
-      <UserProfilePopup open={profileOpen} handleClose={() => setProfileOpen(false)} saveProfile={saveProfile} profile={userProfile} />
     </Box>
   );
 };

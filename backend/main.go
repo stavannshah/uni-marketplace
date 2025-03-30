@@ -87,21 +87,41 @@ func connectToMongoDB() {
 }
 
 func saveUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
 	var user User
-	json.NewDecoder(r.Body).Decode(&user)
-	user.LastLogin = time.Now()
-
-	collection := client.Database("uni_marketplace").Collection("users")
-	_, err := collection.InsertOne(context.TODO(), user)
+	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		log.Fatal(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to save user"})
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	collection := client.Database("uni_marketplace").Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"email": user.Email}
+	update := bson.M{"$set": bson.M{"last_login": user.LastLogin}}
+	opts := options.Update().SetUpsert(true)
+
+	result, err := collection.UpdateOne(ctx, filter, update, opts)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	var response map[string]interface{}
+	if result.UpsertedID != nil {
+		response = map[string]interface{}{
+			"message": "New user created",
+			"userID":  result.UpsertedID,
+		}
+	} else {
+		response = map[string]interface{}{
+			"message": "User updated",
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {

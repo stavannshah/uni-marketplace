@@ -31,7 +31,7 @@ import { Logout, AccountCircle } from "@mui/icons-material";
 import { saveAs } from "file-saver";
 
 
-// OTPPage component as it is
+// OTPPage component as is
 const OTPPage = ({ onLogin }) => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -94,7 +94,9 @@ const OTPPage = ({ onLogin }) => {
   
         console.log("Backend response status:", response.status); // Debug log
         if (response.ok) {
+          const data = await response.json();
           localStorage.setItem("isLoggedIn", "true");
+          localStorage.setItem("userID", data.userID);
           onLogin();
         } else {
           const errorData = await response.json(); // Parse error response

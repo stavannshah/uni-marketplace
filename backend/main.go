@@ -220,6 +220,36 @@ func createCurrencyExchangeRequest(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(request)
 }
 
+func getCurrencyExchangeRequests(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	collection := client.Database("uni_marketplace").Collection("currency_exchange_requests")
+
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to retrieve currency exchange requests"})
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var requests []CurrencyExchangeRequest
+	for cursor.Next(context.TODO()) {
+		var request CurrencyExchangeRequest
+		if err := cursor.Decode(&request); err != nil {
+			log.Fatal(err)
+		}
+		requests = append(requests, request)
+	}
+
+	response := map[string]interface{}{
+		"request_count": len(requests),
+		"requests":      requests,
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
 func postSubleasingRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var sublease SubleasingRequest
@@ -280,6 +310,7 @@ func main() {
 	r.HandleFunc("/api/marketplace/listing", postMarketplaceListing).Methods("POST")
 	r.HandleFunc("/api/marketplace/listings", getMarketplaceListings).Methods("GET")
 	r.HandleFunc("/api/currency/exchange", createCurrencyExchangeRequest).Methods("POST")
+	r.HandleFunc("/api/currency/exchange/requests", getCurrencyExchangeRequests).Methods("GET")
 	r.HandleFunc("/api/subleasing", postSubleasingRequest).Methods("POST")
 	r.HandleFunc("/api/subleasing/requests", getSubleasingRequests).Methods("GET")
 

@@ -276,7 +276,7 @@ const MainWebsite = () => {
     localStorage.removeItem("isLoggedIn");
     window.location.reload();
   };
-
+  const userID = localStorage.getItem("userID");
   return (
     <Box>
       <AppBar position="static">
@@ -288,7 +288,11 @@ const MainWebsite = () => {
             <Tab label="Sub Leasing Listing" value="Sub Leasing Listing" />
           </Tabs>
           <IconButton color="inherit" onClick={() => setProfileOpen(true)} sx={{ marginLeft: "auto" }}>
-            <AccountCircle />
+            <div>
+              User: {userID}
+              <AccountCircle />
+              </div>
+            
           </IconButton>
           <Button
             color="inherit"

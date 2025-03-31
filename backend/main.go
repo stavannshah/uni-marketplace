@@ -14,6 +14,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/rs/cors"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -98,30 +99,40 @@ func saveUser(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
+	// Define the filter and update query
 	filter := bson.M{"email": user.Email}
 	update := bson.M{"$set": bson.M{"last_login": user.LastLogin}}
 	opts := options.Update().SetUpsert(true)
 
+	// Perform the update
 	result, err := collection.UpdateOne(ctx, filter, update, opts)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	var response map[string]interface{}
+	var userID interface{}
 	if result.UpsertedID != nil {
-		response = map[string]interface{}{
-			"message": "New user created",
-			"userID":  result.UpsertedID,
-		}
+		userID = result.UpsertedID // New user created
 	} else {
-		response = map[string]interface{}{
-			"message": "User updated",
+		// Retrieve user ID for existing users
+		var existingUser struct {
+			ID primitive.ObjectID `bson:"_id"`
 		}
+		err := collection.FindOne(ctx, filter).Decode(&existingUser)
+		if err != nil {
+			http.Error(w, "Failed to retrieve user ID", http.StatusInternalServerError)
+			return
+		}
+		userID = existingUser.ID
 	}
 
+	// Send the response
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "User saved successfully",
+		"userID":  userID,
+	})
 }
 
 func getUsers(w http.ResponseWriter, r *http.Request) {
@@ -156,19 +167,40 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 
 func postMarketplaceListing(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var listing MarketplaceListing
-	json.NewDecoder(r.Body).Decode(&listing)
-	listing.DatePosted = time.Now()
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	collection := client.Database("uni_marketplace").Collection("marketplace_listings")
-	_, err := collection.InsertOne(context.TODO(), listing)
-	if err != nil {
-		log.Fatal(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to post listing"})
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
 		return
 	}
 
+	var listing MarketplaceListing
+	err := json.NewDecoder(r.Body).Decode(&listing)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if listing.UserID == "" || listing.Title == "" || len(listing.Pictures) == 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Missing required fields"})
+		return
+	}
+
+	listing.DatePosted = time.Now()
+
+	collection := client.Database("uni_marketplace").Collection("marketplace_listings")
+	_, err = collection.InsertOne(context.Background(), listing)
+	if err != nil {
+		log.Printf("Database error: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create listing"})
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(listing)
 }
 
@@ -282,10 +314,11 @@ func main() {
 	r.HandleFunc("/api/currency/exchange", createCurrencyExchangeRequest).Methods("POST")
 	r.HandleFunc("/api/subleasing", postSubleasingRequest).Methods("POST")
 	r.HandleFunc("/api/subleasing/requests", getSubleasingRequests).Methods("GET")
+	r.HandleFunc("/api/getMarketplaceListings", getMarketplaceListings).Methods("GET")
 
 	// Enable CORS
 	c := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:5174"},
+		AllowedOrigins:   []string{"http://localhost:5173", "http://localhost:5174", "http://localhost:5175"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,

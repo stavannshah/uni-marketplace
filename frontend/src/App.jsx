@@ -252,6 +252,126 @@ const UserProfilePopup = ({ open, handleClose, saveProfile, profile }) => {
   );
 };
 
+const UserActivitiesSection = () => {
+  const [activities, setActivities] = useState({
+    marketplace: [],
+    currency: [],
+    subleasing: [],
+  });
+  const [loading, setLoading] = useState(true);
+  const userID = localStorage.getItem("userID");
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      console.log("Fetching user activities...");
+      console.log(`User ID: ${userID}`);
+
+      try {
+        const response = await fetch(
+          `http://localhost:8080/api/user/activities?user_id=${userID}`
+        );
+
+        console.log("Response received:", response);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log("Fetched data:", data);
+
+        setActivities({
+          marketplace: data.marketplace_listings || [],
+          currency: data.currency_exchange_requests || [],
+          subleasing: data.subleasingRequests || [],
+        });
+
+        console.log("Updated activities state:", {
+          marketplace: data.marketplaceListings || [],
+          currency: data.currencyExchangeRequests || [],
+          subleasing: data.subleasingRequests || [],
+        });
+      } catch (error) {
+        console.error("Error fetching activities:", error);
+      } finally {
+        console.log("Finished fetching activities.");
+        setLoading(false);
+      }
+    };
+
+    fetchActivities();
+  }, [userID]);
+
+  const renderActivitySection = (title, items, fields) => {
+    console.log(`Rendering section: ${title}`);
+    console.log(`Items for ${title}:`, items);
+
+    return (
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="h5" gutterBottom>
+          {title}
+        </Typography>
+        {items.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">
+            No {title.toLowerCase()} found
+          </Typography>
+        ) : (
+          <Table component={Paper}>
+            <TableHead>
+              <TableRow>
+                {fields.map((field) => (
+                  <TableCell key={field}>{field}</TableCell>
+                ))}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {items.map((item, index) => (
+                <TableRow key={index}>
+                  {fields.map((field) => (
+                    <TableCell key={field}>
+                      {item[field.toLowerCase()] || "N/A"}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </Box>
+    );
+  };
+
+  if (loading) {
+    console.log("Component is in loading state.");
+    return <CircularProgress sx={{ mt: 4 }} />;
+  }
+
+  console.log("Rendering main component with activities:", activities);
+
+  return (
+    <Box sx={{ p: 3 }}>
+      {renderActivitySection("Item Listings", activities.marketplace, [
+        "Title",
+        "Price",
+        "Condition",
+        "Category",
+      ])}
+
+      {renderActivitySection(
+        "Currency Exchange Listings",
+        activities.currency,
+        ["Amount", "FromCurrency", "ToCurrency", "RequestDate"]
+      )}
+
+      {renderActivitySection("Sub Leasing Listings", activities.subleasing, [
+        "Title",
+        "Rent",
+        "Location",
+        "Period",
+      ])}
+    </Box>
+  );
+};
 // MainWebsite component with tabs and users list in the "Home" tab
 const MainWebsite = () => {
   const [tab, setTab] = useState("Home");
@@ -308,7 +428,7 @@ const MainWebsite = () => {
         <Typography variant="h3" gutterBottom>
           {tab}
         </Typography>
-        {tab === "Home" && <UsersList />}
+        {tab === "Home" && <UserActivitiesSection />}
         {tab === "Item Listing" && <ItemListing />}
         <Typography variant="body1">Welcome to the {tab} page!</Typography>
       </Container>

@@ -166,39 +166,50 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func postMarketplaceListing(w http.ResponseWriter, r *http.Request) {
+	origin := r.Header.Get("Origin")
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	w.Header().Set("Access-Control-Allow-Origin", origin) // Allow the specific origin making the request
 	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
+	// Handle preflight request
 	if r.Method == "OPTIONS" {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	var listing MarketplaceListing
+
+	// Decode incoming JSON body into the MarketplaceListing struct
 	err := json.NewDecoder(r.Body).Decode(&listing)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
+	// Validate required fields
 	if listing.UserID == "" || listing.Title == "" || len(listing.Pictures) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Missing required fields"})
 		return
 	}
 
+	// Set server-side values
 	listing.DatePosted = time.Now()
 
 	collection := client.Database("uni_marketplace").Collection("marketplace_listings")
-	_, err = collection.InsertOne(context.Background(), listing)
+
+	// Attempt to insert into MongoDB
+	result, err := collection.InsertOne(context.Background(), listing)
 	if err != nil {
-		log.Printf("Database error: %v", err)
+		log.Printf("Database error: %v\n", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create listing"})
 		return
 	}
+
+	// Log success and return created document with generated ID
+	log.Printf("Successfully inserted document with ID: %v\n", result.InsertedID)
 
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(listing)
@@ -309,12 +320,13 @@ func main() {
 
 	r.HandleFunc("/api/saveUser", saveUser).Methods("POST")
 	r.HandleFunc("/api/users", getUsers).Methods("GET")
-	r.HandleFunc("/api/marketplace/listing", postMarketplaceListing).Methods("POST")
-	r.HandleFunc("/api/marketplace/listings", getMarketplaceListings).Methods("GET")
+	//r.HandleFunc("/api/marketplace/listing", postMarketplaceListing).Methods("POST")
+	//r.HandleFunc("/api/marketplace/listings", getMarketplaceListings).Methods("GET")
 	r.HandleFunc("/api/currency/exchange", createCurrencyExchangeRequest).Methods("POST")
 	r.HandleFunc("/api/subleasing", postSubleasingRequest).Methods("POST")
 	r.HandleFunc("/api/subleasing/requests", getSubleasingRequests).Methods("GET")
 	r.HandleFunc("/api/getMarketplaceListings", getMarketplaceListings).Methods("GET")
+	r.HandleFunc("/api/postMarketplaceListing", postMarketplaceListing).Methods("POST")
 
 	// Enable CORS
 	c := cors.New(cors.Options{

@@ -66,8 +66,12 @@ const ItemListing = () => {
 
       // Refresh listings
       const updated = await fetch("http://localhost:8080/api/getMarketplaceListings");
-      setListings((await updated.json()).listings);
+      const data = await updated.json();
+      alert("Listing posted successfully.");
+      setListings(data.listings);
+      
       setShowForm(false);
+
 
     } catch (error) {
       console.error("Error:", error.message);

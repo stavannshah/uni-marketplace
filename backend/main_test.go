@@ -138,6 +138,38 @@ func mockCreateCurrencyExchangeRequest(testClient *mongo.Client) http.HandlerFun
 	}
 }
 
+func mockGetCurrencyExchangeRequests(testClient *mongo.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		collection := testClient.Database("uni_marketplace_test").Collection("currency_exchange_requests")
+		cursor, err := collection.Find(context.Background(), bson.M{})
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			json.NewEncoder(w).Encode(map[string]string{"error": "Failed to retrieve currency exchange requests"})
+			return
+		}
+		defer cursor.Close(context.Background())
+
+		var requests []CurrencyExchangeRequest
+		for cursor.Next(context.Background()) {
+			var request CurrencyExchangeRequest
+			if err := cursor.Decode(&request); err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				json.NewEncoder(w).Encode(map[string]string{"error": "Failed to decode request"})
+				return
+			}
+			requests = append(requests, request)
+		}
+
+		response := map[string]interface{}{
+			"request_count": len(requests),
+			"requests":      requests,
+		}
+		json.NewEncoder(w).Encode(response)
+	}
+}
+
 func mockPostSubleasingRequest(testClient *mongo.Client) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -401,4 +433,126 @@ func TestPostSubleasingRequest(t *testing.T) {
 		// Asserting the status code
 		assert.Equal(t, test.expectedCode, rr.Code, test.description)
 	}
+}
+
+func TestGetCurrencyExchangeRequests(t *testing.T) {
+	// Set up a test MongoDB client
+	testClient, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		t.Fatalf("Failed to connect to test MongoDB: %v", err)
+	}
+	defer testClient.Disconnect(context.Background())
+
+	// Insert test data
+	collection := testClient.Database("uni_marketplace").Collection("currency_exchange_requests")
+	collection.InsertMany(context.Background(), []interface{}{
+		bson.M{"user_id": "12345", "amount": 100, "from_currency": "USD", "to_currency": "EUR", "request_date": time.Now()},
+		bson.M{"user_id": "67890", "amount": 200, "from_currency": "GBP", "to_currency": "USD", "request_date": time.Now()},
+	})
+
+	tests := []struct {
+		description  string
+		route        string
+		expectedCode int
+	}{
+		{
+			description:  "GET status 200 with data",
+			route:        "/api/currency/exchange",
+			expectedCode: 200,
+		},
+	}
+
+	for _, test := range tests {
+		req := httptest.NewRequest("GET", test.route, nil)
+		req.Header.Add("Content-Type", "application/json")
+
+		// Setting up the test server
+		rr := httptest.NewRecorder()
+		r := mux.NewRouter()
+		r.HandleFunc("/api/currency/exchange", mockGetCurrencyExchangeRequests(testClient)).Methods("GET")
+		r.ServeHTTP(rr, req)
+
+		// Asserting the status code
+		assert.Equal(t, test.expectedCode, rr.Code, test.description)
+
+		// Check if response contains expected data
+		var response map[string]interface{}
+		err := json.Unmarshal(rr.Body.Bytes(), &response)
+		assert.Nil(t, err, "Failed to parse response")
+		assert.GreaterOrEqual(t, int(response["request_count"].(float64)), 2, "Expected at least 2 exchange requests")
+	}
+}
+
+func mockGetUserActivities(testClient *mongo.Client) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		userID := r.URL.Query().Get("user_id")
+		if userID == "" {
+			http.Error(w, "user_id is required", http.StatusBadRequest)
+			return
+		}
+
+		ctx := context.Background()
+
+		// Query marketplace_listings
+		marketplaceCollection := testClient.Database("uni_marketplace_test").Collection("marketplace_listings")
+		var marketplaceListings []MarketplaceListing
+		cursor, err := marketplaceCollection.Find(ctx, bson.M{"user_id": userID})
+		if err == nil {
+			cursor.All(ctx, &marketplaceListings)
+		}
+
+		// Query currency_exchange_requests
+		currencyExchangeCollection := testClient.Database("uni_marketplace_test").Collection("currency_exchange_requests")
+		var currencyExchangeRequests []CurrencyExchangeRequest
+		cursor, err = currencyExchangeCollection.Find(ctx, bson.M{"user_id": userID})
+		if err == nil {
+			cursor.All(ctx, &currencyExchangeRequests)
+		}
+
+		// Query subleasing_requests
+		subleasingCollection := testClient.Database("uni_marketplace_test").Collection("subleasing_requests")
+		var subleasingRequests []SubleasingRequest
+		cursor, err = subleasingCollection.Find(ctx, bson.M{"user_id": userID})
+		if err == nil {
+			cursor.All(ctx, &subleasingRequests)
+		}
+
+		// Aggregate results
+		userActivities := UserActivities{
+			MarketplaceListings:      marketplaceListings,
+			CurrencyExchangeRequests: currencyExchangeRequests,
+			SubleasingRequests:       subleasingRequests,
+		}
+
+		json.NewEncoder(w).Encode(userActivities)
+	}
+}
+
+func TestGetUserActivities(t *testing.T) {
+	testClient, err := mongo.Connect(context.Background(), options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		t.Fatalf("Failed to connect to test MongoDB: %v", err)
+	}
+	defer testClient.Disconnect(context.Background())
+
+	userID := "12345"
+	collection := testClient.Database("uni_marketplace_test").Collection("marketplace_listings")
+	collection.InsertOne(context.Background(), MarketplaceListing{
+		UserID:      userID,
+		Title:       "Bike for Sale",
+		Description: "Good condition",
+		Category:    "Vehicles",
+		Price:       150.00,
+		Condition:   "Used",
+		DatePosted:  time.Now(),
+	})
+
+	req := httptest.NewRequest("GET", "/api/user/activities?user_id="+userID, nil)
+	rr := httptest.NewRecorder()
+	r := mux.NewRouter()
+	r.HandleFunc("/api/user/activities", mockGetUserActivities(testClient)).Methods("GET")
+	r.ServeHTTP(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
 }

@@ -69,6 +69,12 @@ type SubleasingRequest struct {
 	DatePosted time.Time `json:"date_posted" bson:"date_posted"`
 }
 
+type UserActivities struct {
+	MarketplaceListings      []MarketplaceListing      `json:"marketplace_listings"`
+	CurrencyExchangeRequests []CurrencyExchangeRequest `json:"currency_exchange_requests"`
+	SubleasingRequests       []SubleasingRequest       `json:"subleasing_requests"`
+}
+
 func connectToMongoDB() {
 	err_0 := godotenv.Load()
 	if err_0 != nil {
@@ -263,6 +269,36 @@ func createCurrencyExchangeRequest(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(request)
 }
 
+func getCurrencyExchangeRequests(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	collection := client.Database("uni_marketplace").Collection("currency_exchange_requests")
+
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		log.Fatal(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to retrieve currency exchange requests"})
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var requests []CurrencyExchangeRequest
+	for cursor.Next(context.TODO()) {
+		var request CurrencyExchangeRequest
+		if err := cursor.Decode(&request); err != nil {
+			log.Fatal(err)
+		}
+		requests = append(requests, request)
+	}
+
+	response := map[string]interface{}{
+		"request_count": len(requests),
+		"requests":      requests,
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
 func postSubleasingRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var sublease SubleasingRequest
@@ -314,6 +350,66 @@ func getSubleasingRequests(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func getUserActivities(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	userID := r.URL.Query().Get("user_id")
+	if userID == "" {
+		http.Error(w, "user_id is required", http.StatusBadRequest)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Query marketplace_listings collection
+	marketplaceCollection := client.Database("uni_marketplace").Collection("marketplace_listings")
+	var marketplaceListings []MarketplaceListing
+	cursor, err := marketplaceCollection.Find(ctx, bson.M{"user_id": userID})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err = cursor.All(ctx, &marketplaceListings); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Query currency_exchange_requests collection
+	currencyExchangeCollection := client.Database("uni_marketplace").Collection("currency_exchange_requests")
+	var currencyExchangeRequests []CurrencyExchangeRequest
+	cursor, err = currencyExchangeCollection.Find(ctx, bson.M{"user_id": userID})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err = cursor.All(ctx, &currencyExchangeRequests); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Query subleasing_requests collection
+	subleasingCollection := client.Database("uni_marketplace").Collection("subleasing_requests")
+	var subleasingRequests []SubleasingRequest
+	cursor, err = subleasingCollection.Find(ctx, bson.M{"user_id": userID})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if err = cursor.All(ctx, &subleasingRequests); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Aggregate results
+	userActivities := UserActivities{
+		MarketplaceListings:      marketplaceListings,
+		CurrencyExchangeRequests: currencyExchangeRequests,
+		SubleasingRequests:       subleasingRequests,
+	}
+
+	json.NewEncoder(w).Encode(userActivities)
+}
+
 func main() {
 	connectToMongoDB()
 	r := mux.NewRouter()
@@ -323,10 +419,12 @@ func main() {
 	//r.HandleFunc("/api/marketplace/listing", postMarketplaceListing).Methods("POST")
 	//r.HandleFunc("/api/marketplace/listings", getMarketplaceListings).Methods("GET")
 	r.HandleFunc("/api/currency/exchange", createCurrencyExchangeRequest).Methods("POST")
+	r.HandleFunc("/api/currency/exchange/requests", getCurrencyExchangeRequests).Methods("GET")
 	r.HandleFunc("/api/subleasing", postSubleasingRequest).Methods("POST")
 	r.HandleFunc("/api/subleasing/requests", getSubleasingRequests).Methods("GET")
 	r.HandleFunc("/api/getMarketplaceListings", getMarketplaceListings).Methods("GET")
 	r.HandleFunc("/api/postMarketplaceListing", postMarketplaceListing).Methods("POST")
+	r.HandleFunc("/api/user/activities", getUserActivities).Methods("GET")
 
 	// Enable CORS
 	c := cors.New(cors.Options{

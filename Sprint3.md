@@ -90,6 +90,19 @@
    - Ensures that clicking the "Create Listing" button triggers the correct API call.
 4. **TestHomepageRendering**  
    - Validates that user listings appear dynamically on the homepage.
+5. **DisplaysItemListingsCorrectly**  
+   - Verifies that the item listing component correctly fetches and displays item data including title, category, description, and price.
+6. **OpensListingFormDialog**  
+   - Checks that clicking the "Create Listing" button opens the new listing form dialog.
+7. **RendersButtonWithCorrectText**  
+   - Ensures the button renders and displays the correct child text content.
+8. **CallsOnClickHandlerWhenClicked**  
+   - Verifies that the `onClick` callback is called when the button is clicked.
+9. **AppliesAdditionalClassNameWhenProvided**  
+   - Checks that custom class names are applied to the button in addition to default styles.
+10. **RendersChildrenCorrectly**  
+   - Verifies that the `Card` component correctly renders its child content.
+
 
 ---
 

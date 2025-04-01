@@ -9,7 +9,7 @@
 - **Backend Engineers**: Ahmed Ali Syed, Vedant Upganlawar  
 
 **Frontend video link**: [Placeholder for video link]  
-**Backend video link**: [Placeholder for video link]  
+**Backend video link**: [[Backend Video](https://drive.google.com/file/d/1ZbGyzHbKQGwsXm7g2FBn6QCg6JRxgzH7/view?usp=sharing)]  
 **GitHub Link**: [https://github.com/stavannshah/uni-marketplace/edit/main/Sprint3.md]  
 
 ## Sprint 3 Report  
@@ -39,6 +39,36 @@
    - Ensured that API responses are correctly processed and displayed on the UI.
    - Verified that user interactions (such as creating listings) work without errors and persist data correctly.
 
+5. **Updated Backend API Documentation**  
+   - We updated the documentation of the API by adding the Currency Exchange and User Activities API.  
+   - **API Endpoint Documentation**: [[API Documentation](https://documenter.getpostman.com/view/42795112/2sAYdiopTw)]
+   - **Acceptance Criteria**:  
+     - API documentation includes request/response structures.  
+     - API endpoints are clearly defined in below "API Endpoints Documentation" section.
+
+6. **Development of `getUserActivities` Function**  
+   - Implemented the `getUserActivities` API to retrieve a user's activities from three collections: `marketplace_listings`, `currency_exchange_requests`, and `subleasing_requests`.
+   - Ensured that the API accepts a `user_id` query parameter and returns aggregated data on marketplace listings, currency exchange requests, and subleasing requests.
+   - Handled errors and returned appropriate responses if any data retrieval failed from the database.
+
+7. **Development of `getCurrencyExchangeRequests` Function**  
+   - Implemented the `getCurrencyExchangeRequests` API to fetch all currency exchange requests from the `currency_exchange_requests` collection.
+   - Included response data that consists of the total count of requests and the details of each request.
+   - Handled potential errors and provided meaningful error messages in case of failure.
+
+8. **Integration of New Routes in Main Router**  
+   - Added the newly developed APIs (`/api/user/activities` and `/api/currency/exchange/requests`) to the main router to enable access to user activities and currency exchange request data.
+   - Ensured proper routing and error handling in the backend.
+
+9. **Test for `getUserActivities` API**  
+   - Implemented a test for the `getUserActivities` API, which verifies the ability to fetch user activities from the database based on the `user_id`.
+   - Created a mock database collection for marketplace listings, simulating the insertion of a test user listing.
+   - The test ensures that the API correctly returns a 200 HTTP status and retrieves user activities.
+
+10. **Test for `getCurrencyExchangeRequests` API**  
+    - Developed a test for the `getCurrencyExchangeRequests` API, verifying that the API correctly retrieves currency exchange requests from the database.
+    - Ensured that the API responds with the correct status and data format when valid requests are made.
+    - The test also checks for appropriate error handling when issues arise during data retrieval.
 ---
 
 ## Future Work  
@@ -65,48 +95,35 @@
 
 ## Backend Unit Tests  
 1. **TestUserIDRecognition**  
-   - Confirms that the system correctly identifies users based on `userid`.
-2. **TestGetUserListingsAPI**  
-   - Ensures that `GET /api/user/listings` retrieves the correct listings.
-3. **TestPostUserListingAPI**  
-   - Validates that `POST /api/user/listing` successfully creates and stores a new listing.
-4. **TestDatabaseStorage**  
-   - Checks that new listings are correctly saved in the database.
+   - Confirms that the system correctly identifies users based on `user_id`.
 
----
+2. **TestGetUserActivitiesAPI**  
+   - Ensures that `GET /api/user/activities` retrieves the correct user activities, including marketplace listings, currency exchange requests, and subleasing requests.
 
-## Updated API Documentation  
+3. **TestMarketplaceListingsQuery**  
+   - Verifies that the marketplace listings are correctly queried from the database based on `user_id`.
 
-### User Management  
-- **POST /api/saveUser**  
-  - Saves a new user to the database with their email, name, and last login timestamp.
+4. **TestCurrencyExchangeRequestsQuery**  
+   - Confirms that currency exchange requests are correctly retrieved from the database based on `user_id`.
 
-- **GET /api/users**  
-  - Retrieves a list of all registered users.
+5. **TestSubleasingRequestsQuery**  
+   - Validates that subleasing requests are correctly queried from the database based on `user_id`.
 
-### Marketplace Listings  
-- **POST /api/user/listing**  
-  - Creates a new listing with title, description, category, price, condition, location, and images.
+6. **TestAggregatedUserActivities**  
+   - Ensures that the system correctly aggregates marketplace listings, currency exchange requests, and subleasing requests into a single response.
 
-- **GET /api/user/listings**  
-  - Fetches all listings created by the user.
+7. **TestUserIDRequiredError**  
+   - Confirms that a `400 Bad Request` error is returned when `user_id` is not provided in the API request.
 
-- **POST /api/marketplace/listing**  
-  - Adds a new general marketplace listing.
+8. **TestMongoDBConnection**  
+   - Verifies the successful connection to the test MongoDB instance.
 
-- **GET /api/marketplace/listings**  
-  - Retrieves all marketplace listings.
+9. **TestSuccessfulAPIResponse**  
+   - Ensures that the `GET /api/user/activities` endpoint returns a successful `200 OK` response with correct JSON payload.
 
-### Currency Exchange Requests  
-- **POST /api/currency/exchange**  
-  - Creates a currency exchange request with user ID, amount, source currency, and target currency.
+10. **TestDatabaseInsertion**  
+    - Checks that marketplace listings are correctly inserted into the database.
 
-### Subleasing Requests  
-- **POST /api/subleasing**  
-  - Posts a subleasing request including rent, location, period, and images.
-
-- **GET /api/subleasing/requests**  
-  - Retrieves all subleasing requests.
 
 ---
 

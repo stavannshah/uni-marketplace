@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import emailjs from "emailjs-com";
 import ItemListing from "./ItemListing"; 
+import UserActivitiesSection from "./HomePage.jsx";
 import './App.css';
 import {
   Container,
@@ -25,10 +26,14 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from "@mui/material";
 import { Logout, AccountCircle } from "@mui/icons-material";
 import { saveAs } from "file-saver";
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 
 
 // OTPPage component as is
@@ -252,126 +257,7 @@ const UserProfilePopup = ({ open, handleClose, saveProfile, profile }) => {
   );
 };
 
-const UserActivitiesSection = () => {
-  const [activities, setActivities] = useState({
-    marketplace: [],
-    currency: [],
-    subleasing: [],
-  });
-  const [loading, setLoading] = useState(true);
-  const userID = localStorage.getItem("userID");
 
-  useEffect(() => {
-    const fetchActivities = async () => {
-      console.log("Fetching user activities...");
-      console.log(`User ID: ${userID}`);
-
-      try {
-        const response = await fetch(
-          `http://localhost:8080/api/user/activities?user_id=${userID}`
-        );
-
-        console.log("Response received:", response);
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log("Fetched data:", data);
-
-        setActivities({
-          marketplace: data.marketplace_listings || [],
-          currency: data.currency_exchange_requests || [],
-          subleasing: data.subleasingRequests || [],
-        });
-
-        console.log("Updated activities state:", {
-          marketplace: data.marketplaceListings || [],
-          currency: data.currencyExchangeRequests || [],
-          subleasing: data.subleasingRequests || [],
-        });
-      } catch (error) {
-        console.error("Error fetching activities:", error);
-      } finally {
-        console.log("Finished fetching activities.");
-        setLoading(false);
-      }
-    };
-
-    fetchActivities();
-  }, [userID]);
-
-  const renderActivitySection = (title, items, fields) => {
-    console.log(`Rendering section: ${title}`);
-    console.log(`Items for ${title}:`, items);
-
-    return (
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h5" gutterBottom>
-          {title}
-        </Typography>
-        {items.length === 0 ? (
-          <Typography variant="body2" color="text.secondary">
-            No {title.toLowerCase()} found
-          </Typography>
-        ) : (
-          <Table component={Paper}>
-            <TableHead>
-              <TableRow>
-                {fields.map((field) => (
-                  <TableCell key={field}>{field}</TableCell>
-                ))}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {items.map((item, index) => (
-                <TableRow key={index}>
-                  {fields.map((field) => (
-                    <TableCell key={field}>
-                      {item[field.toLowerCase()] || "N/A"}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </Box>
-    );
-  };
-
-  if (loading) {
-    console.log("Component is in loading state.");
-    return <CircularProgress sx={{ mt: 4 }} />;
-  }
-
-  console.log("Rendering main component with activities:", activities);
-
-  return (
-    <Box sx={{ p: 3 }}>
-      {renderActivitySection("Item Listings", activities.marketplace, [
-        "Title",
-        "Price",
-        "Condition",
-        "Category",
-      ])}
-
-      {renderActivitySection(
-        "Currency Exchange Listings",
-        activities.currency,
-        ["Amount", "FromCurrency", "ToCurrency", "RequestDate"]
-      )}
-
-      {renderActivitySection("Sub Leasing Listings", activities.subleasing, [
-        "Title",
-        "Rent",
-        "Location",
-        "Period",
-      ])}
-    </Box>
-  );
-};
 // MainWebsite component with tabs and users list in the "Home" tab
 const MainWebsite = () => {
   const [tab, setTab] = useState("Home");
@@ -398,10 +284,24 @@ const MainWebsite = () => {
   };
   const userID = localStorage.getItem("userID");
   return (
-    <Box>
+    <Box sx={{ minHeight: "100vh", backgroundColor: "#f5f5f5", backgroundImage: "url('/uf-background.jpg')", backgroundSize: "cover", backgroundRepeat: "no-repeat", backgroundPosition: "center"}}>
+
       <AppBar position="static">
-        <Toolbar>
-          <Tabs value={tab} onChange={(e, newValue) => setTab(newValue)}>
+      <Toolbar sx={{ bgcolor: "white  " }}>
+        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#0021A5", mr: 4 }}>
+           UniMarketplace
+        </Typography>
+        <Tabs 
+            value={tab} 
+            onChange={(e, newValue) => setTab(newValue)} 
+            textColor="primary" 
+            indicatorColor="primary"
+            sx={{
+              '& .MuiTab-root': { color: '#FA4616' },
+              '& .Mui-selected': { fontWeight: 'bold' }
+            }}
+          >
+
             <Tab label="Home" value="Home" />
             <Tab label="Item Listing" value="Item Listing" />
             <Tab label="Currency Exchange Listing" value="Currency Exchange Listing" />
@@ -425,14 +325,62 @@ const MainWebsite = () => {
         </Toolbar>
       </AppBar>
       <Container sx={{ mt: 4 }}>
-        <Typography variant="h3" gutterBottom>
-          {tab}
-        </Typography>
         {tab === "Home" && <UserActivitiesSection />}
         {tab === "Item Listing" && <ItemListing />}
-        <Typography variant="body1">Welcome to the {tab} page!</Typography>
+        <Box sx={{ bgcolor: '#0021A5', px: 2, py: 1, borderRadius: 1, mt: 4, mb: 2 }}>
+          <Typography variant="h5" sx={{ color: 'white', m: 0 }}>
+            Frequently Asked Questions
+          </Typography>
+        </Box>
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography>How do I list an item for sale?</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Typography>
+              To list an item, go to the 'Item Listing' tab, click on "Add Item," fill in the item name, condition, price, and upload an image.
+            </Typography>
+          </AccordionDetails>
+      </Accordion>
+      <Accordion>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography>What currencies are supported in Currency Exchange?</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Typography>
+            We support major currencies like USD, INR, EUR, and more. You can set your exchange rate and preferred currency.
+          </Typography>
+        </AccordionDetails>
+    </Accordion>
+    <Accordion>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Typography>How do I post a sublease listing?</Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        <Typography>
+          Use the 'Sub Leasing Listing' tab to enter details like rent, location, lease duration, and photos of the property.
+        </Typography>
+      </AccordionDetails>
+    </Accordion>
+
+    <Accordion>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Typography>Can I edit or delete my listings?</Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        <Typography>
+          Yes, go to your profile to view all your listings. Each post has options to edit or delete.
+        </Typography>
+      </AccordionDetails>
+    </Accordion>
       </Container>
       <UserProfilePopup open={profileOpen} handleClose={() => setProfileOpen(false)} saveProfile={saveProfile} profile={userProfile} />
+      <Box sx={{ mt: 6, py: 2, textAlign: "center", bgcolor: "#0021A5", color: "white" }}>
+        <Typography variant="body2">
+          Built at University of Florida | UniMarketplace © 2025
+        </Typography>
+      </Box>
+
     </Box>
   );
 };

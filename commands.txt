@@ -33,3 +33,5 @@ git pull origin main
 git merge stavan_shah
 git push origin main
 
+netstat -ano | findstr :9000    
+taskkill /PID 12360 /F

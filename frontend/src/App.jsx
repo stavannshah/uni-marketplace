@@ -229,8 +229,22 @@ const UsersList = () => {
 };
 
 const UserProfilePopup = ({ open, handleClose, saveProfile, profile }) => {
-  const [formData, setFormData] = useState(profile);
-
+  const defaultProfile = {
+    name: "",
+    email: "",
+    preferred_email: "",
+    preferences: "",
+    location: ""
+  };
+  
+  const [formData, setFormData] = useState(defaultProfile);
+  
+  useEffect(() => {
+    if (open){
+      setFormData(profile || defaultProfile);
+    }
+  }, [open,profile]);
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -242,14 +256,72 @@ const UserProfilePopup = ({ open, handleClose, saveProfile, profile }) => {
   };
 
   return (
-    <Dialog open={open} onClose={handleClose}>
+    <Dialog open={open} onClose={handleClose}  fullWidth>
       <DialogTitle>Edit Profile</DialogTitle>
-      <DialogContent>
-        <TextField fullWidth label="Name" name="name" value={formData.name} onChange={handleChange} sx={{ mb: 2 }} />
-        <TextField fullWidth label="Preferred Email" name="preferred_email" value={formData.preferred_email} onChange={handleChange} sx={{ mb: 2 }} />
-        <TextField fullWidth label="Preferences" name="preferences" value={formData.preferences} onChange={handleChange} sx={{ mb: 2 }} />
-        <TextField fullWidth label="Location" name="location" value={formData.location} onChange={handleChange} sx={{ mb: 2 }} />
+      <DialogContent
+        dividers
+        sx={{
+          px: 3,
+          py: 2,
+          backgroundColor: "#f9f9fb",
+          borderRadius: 2
+        }}
+      >
+        <Typography variant="h6" gutterBottom sx={{ color: "#0021A5", fontWeight: "bold" }}>
+          ✏️ Update Profile Details
+        </Typography>
+
+        <Box sx={{ display: "grid", gap: 2, mt: 2 }}>
+          <TextField
+            label="Name"
+            name="name"
+            value={formData.name ?? ""}
+            onChange={handleChange}
+            fullWidth
+            variant="outlined"
+            sx={{ backgroundColor: "white", borderRadius: 1 }}
+          />
+          <TextField
+            label="Preferred Email"
+            name="preferred_email"
+            value={formData.preferred_email ?? ""}
+            onChange={handleChange}
+            fullWidth
+            variant="outlined"
+            sx={{ backgroundColor: "white", borderRadius: 1 }}
+          />
+          <TextField
+            label="Preferences"
+            name="preferences"
+            value={formData.preferences ?? ""}
+            onChange={handleChange}
+            fullWidth
+            variant="outlined"
+            sx={{ backgroundColor: "white", borderRadius: 1 }}
+          />
+          <TextField
+            label="Location"
+            name="location"
+            value={formData.location ?? ""}
+            onChange={handleChange}
+            fullWidth
+            variant="outlined"
+            sx={{ backgroundColor: "white", borderRadius: 1 }}
+          />
+          <TextField
+            label="Email (for login)"
+            name="email"
+            value={formData.email ?? ""}
+            onChange={handleChange}
+            fullWidth
+            variant="outlined"
+            disabled
+            sx={{ backgroundColor: "#f0f0f0", borderRadius: 1 }}
+            helperText="This email is used to log into UniMarketplace"
+          />
+        </Box>
       </DialogContent>
+
       <DialogActions>
         <Button onClick={handleClose}>Cancel</Button>
         <Button variant="contained" onClick={handleSave}>Save</Button>
@@ -264,20 +336,52 @@ const MainWebsite = () => {
   const [tab, setTab] = useState("Home");
 
   const [profileOpen, setProfileOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState({ name: "", preferred_email: "", preferences: "", location: "" });
+  const [userProfile, setUserProfile] = useState({ name: "", email:"",preferred_email: "", preferences: "", location: "" });
 
   useEffect(() => {
-    fetch("userProfile.json")
-      .then((response) => response.json())
-      .then((data) => setUserProfile(data))
-      .catch((error) => console.error("Error loading profile:", error));
+    const userID = localStorage.getItem("userID");
+    if (!userID) return;
+  
+    const fetchProfile = async () => {
+      try {
+        const response = await fetch(`http://localhost:8080/api/getUserProfile/${userID}`);
+        if (!response.ok) throw new Error("Failed to fetch profile");
+  
+        const data = await response.json();
+        setUserProfile(data.profile);
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+    fetchProfile();
+    
   }, []);
-
-  const saveProfile = (profile) => {
-    setUserProfile(profile);
-    const blob = new Blob([JSON.stringify(profile, null, 2)], { type: "application/json" });
-    saveAs(blob, "userProfile.json");
+  //Stavan May 20 - Updated saveProfile to conncet it to backend
+  const saveProfile = async (profile) => {
+    try {
+      const userID = localStorage.getItem("userID");
+      const response = await fetch(`http://localhost:8080/api/updateUserProfile/${userID}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(profile),
+      });
+  
+      if (response.ok) {
+        const updatedProfile = await response.json();
+        setUserProfile(updatedProfile);
+        alert("Profile updated successfully!");
+      } else {
+        console.error("Failed to update profile");
+        alert("Update failed.");
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      alert("An error occurred.");
+    }
   };
+  
 
   const logout = () => {
     localStorage.removeItem("isLoggedIn");
@@ -308,21 +412,51 @@ const MainWebsite = () => {
             <Tab label="Currency Exchange Listing" value="Currency Exchange Listing" />
             <Tab label="Sub Leasing Listing" value="Sub Leasing Listing" />
           </Tabs>
-          <IconButton color="inherit" onClick={() => setProfileOpen(true)} sx={{ marginLeft: "auto" }}>
-            <div>
-              User: {userID}
-              <AccountCircle />
-              </div>
-            
-          </IconButton>
-          <Button
-            color="inherit"
-            startIcon={<Logout />}
-            onClick={logout}
-            sx={{ marginLeft: "auto" }}
-          >
-            Logout
-          </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
+            <Typography
+              variant="h6"
+              sx={{
+                color: "#0021A5",
+                pr: 2,
+                borderRight: "2px solid lightgrey"
+              }}
+            >
+              Hi! {userProfile.email}
+            </Typography>
+
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                px: 2,
+                borderRight: "2px solid lightgrey"
+              }}
+            >
+              <IconButton
+                color="primary"
+                onClick={() => setProfileOpen(true)}
+                sx={{ p: 0 }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <span>Update Profile</span>
+                  <AccountCircle />
+                </Box>
+              </IconButton>
+            </Box>
+
+            <Box sx={{ pl: 2 }}>
+              <Button
+                variant="contained"
+                startIcon={<Logout />}
+                onClick={logout}
+                sx={{ backgroundColor: "green", color: "white" }}
+              >
+                Logout
+              </Button>
+            </Box>
+          </Box>
+
+
         </Toolbar>
       </AppBar>
       <Container sx={{ mt: 4 }}>

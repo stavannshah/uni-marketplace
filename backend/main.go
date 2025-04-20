@@ -21,10 +21,15 @@ import (
 
 var client *mongo.Client
 
+// Stavan - Updated the User struct to for Profile
 type User struct {
-	Email     string    `json:"email" bson:"email"`
-	LastLogin time.Time `json:"last_login" bson:"last_login"`
-	Name      string    `json:"name" bson:"name"`
+	ID             primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	Email          string             `json:"email" bson:"email"`
+	LastLogin      time.Time          `json:"last_login" bson:"last_login"`
+	Name           string             `json:"name" bson:"name"`
+	PreferredEmail string             `json:"preferred_email" bson:"preferred_email,omitempty"`
+	Preferences    string             `json:"preferences" bson:"preferences,omitempty"`
+	Location       string             `json:"location" bson:"location,omitempty"`
 }
 
 type MarketplaceListing struct {
@@ -169,6 +174,93 @@ func getUsers(w http.ResponseWriter, r *http.Request) {
 		"users":      users,
 	}
 	json.NewEncoder(w).Encode(response)
+}
+
+// Stavan 20th April - To Save User Details from User Profile
+func updateUserProfile(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userIDHex := vars["id"]
+
+	objectID, err := primitive.ObjectIDFromHex(userIDHex)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+
+	var user User
+	err = json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	collection := client.Database("uni_marketplace").Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	filter := bson.M{"_id": objectID}
+	update := bson.M{
+		"$set": bson.M{
+			"name":            user.Name,
+			"preferred_email": user.PreferredEmail,
+			"preferences":     user.Preferences,
+			"location":        user.Location,
+		},
+	}
+
+	result, err := collection.UpdateOne(ctx, filter, update)
+	if err != nil {
+		http.Error(w, "Failed to update profile", http.StatusInternalServerError)
+		return
+	}
+
+	if result.MatchedCount == 0 {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"message": "Profile updated successfully",
+		"userID":  userIDHex,
+	})
+}
+
+// Stavan 20th April - To Get Profile User Details for User Profile
+func getUserProfile(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userIDHex := vars["id"]
+
+	objectID, err := primitive.ObjectIDFromHex(userIDHex)
+	if err != nil {
+		http.Error(w, "Invalid user ID format", http.StatusBadRequest)
+		return
+	}
+
+	collection := client.Database("uni_marketplace").Collection("users")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	var user User
+	err = collection.FindOne(ctx, bson.M{"_id": objectID}).Decode(&user)
+	if err != nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// Return only the required profile fields
+	profile := map[string]string{
+		"name":            user.Name,
+		"email":           user.Email,
+		"preferred_email": user.PreferredEmail,
+		"preferences":     user.Preferences,
+		"location":        user.Location,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"profile": profile,
+	})
 }
 
 func postMarketplaceListing(w http.ResponseWriter, r *http.Request) {
@@ -455,8 +547,10 @@ func main() {
 	r.HandleFunc("/api/getMarketplaceListings", getMarketplaceListings).Methods("GET")
 	r.HandleFunc("/api/postMarketplaceListing", postMarketplaceListing).Methods("POST")
 	r.HandleFunc("/api/user/activities", getUserActivities).Methods("GET")
-	// Added by Stavan 20th April
+	// 3 API Added by Stavan 20th April
 	r.HandleFunc("/api/getCurrencyExchangeListings", getCurrencyExchangeListings).Methods("GET")
+	r.HandleFunc("/api/updateUserProfile/{id}", updateUserProfile).Methods("POST")
+	r.HandleFunc("/api/getUserProfile/{id}", getUserProfile).Methods("GET")
 
 	// Enable CORS
 	c := cors.New(cors.Options{

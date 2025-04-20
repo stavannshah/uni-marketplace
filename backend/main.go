@@ -250,6 +250,36 @@ func getMarketplaceListings(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(response)
 }
+func getCurrencyExchangeListings(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	collection := client.Database("uni_marketplace").Collection("currency_exchange_requests")
+
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		log.Println("Failed to retrieve currency exchange listings:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to retrieve listings"})
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var listings []CurrencyExchangeRequest
+	for cursor.Next(context.TODO()) {
+		var listing CurrencyExchangeRequest
+		if err := cursor.Decode(&listing); err != nil {
+			log.Println("Failed to decode listing:", err)
+			continue
+		}
+		listings = append(listings, listing)
+	}
+
+	response := map[string]interface{}{
+		"listing_count": len(listings),
+		"listings":      listings,
+	}
+	json.NewEncoder(w).Encode(response)
+}
 
 func createCurrencyExchangeRequest(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -425,6 +455,8 @@ func main() {
 	r.HandleFunc("/api/getMarketplaceListings", getMarketplaceListings).Methods("GET")
 	r.HandleFunc("/api/postMarketplaceListing", postMarketplaceListing).Methods("POST")
 	r.HandleFunc("/api/user/activities", getUserActivities).Methods("GET")
+	// Added by Stavan 20th April
+	r.HandleFunc("/api/getCurrencyExchangeListings", getCurrencyExchangeListings).Methods("GET")
 
 	// Enable CORS
 	c := cors.New(cors.Options{

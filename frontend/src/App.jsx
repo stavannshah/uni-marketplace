@@ -3,6 +3,7 @@ import emailjs from "emailjs-com";
 import ItemListing from "./ItemListing"; 
 import UserActivitiesSection from "./HomePage.jsx";
 import CurrencyExchangeListing from "./CurrencyExchange.jsx";
+import SubLeasingListing from "./SubLeasing.jsx";
 import './App.css';
 import {
   Container,
@@ -463,6 +464,7 @@ const MainWebsite = () => {
         {tab === "Home" && <UserActivitiesSection />}
         {tab === "Item Listing" && <ItemListing />}
         {tab === "Currency Exchange Listing" && <CurrencyExchangeListing/>}
+        {tab === "Sub Leasing Listing" && <SubLeasingListing/>}
         <Box sx={{ bgcolor: '#0021A5', px: 2, py: 1, borderRadius: 1, mt: 4, mb: 2 }}>
           <Typography variant="h5" sx={{ color: 'white', m: 0 }}>
             Frequently Asked Questions

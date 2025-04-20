@@ -439,7 +439,8 @@ func postSubleasingRequest(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(sublease)
 }
 
-func getSubleasingRequests(w http.ResponseWriter, r *http.Request) {
+// SS April 20 - Renaming this to old and updating new api below this
+func getSubleasingRequests_old(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	// Get the subleasing requests collection
@@ -465,6 +466,38 @@ func getSubleasingRequests(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Response JSON
+	response := map[string]interface{}{
+		"request_count": len(requests),
+		"requests":      requests,
+	}
+	json.NewEncoder(w).Encode(response)
+}
+
+// SS April 20 - Latsest API for getting subleasing
+func getSubleasingRequests(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	collection := client.Database("uni_marketplace").Collection("subleasing_requests")
+
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		log.Println("Error finding documents:", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to retrieve subleasing requests"})
+		return
+	}
+	defer cursor.Close(context.TODO())
+
+	var requests []SubleasingRequest
+	for cursor.Next(context.TODO()) {
+		var request SubleasingRequest
+		if err := cursor.Decode(&request); err != nil {
+			log.Println("Error decoding document:", err)
+			continue
+		}
+		requests = append(requests, request)
+	}
+
 	response := map[string]interface{}{
 		"request_count": len(requests),
 		"requests":      requests,
@@ -543,14 +576,16 @@ func main() {
 	r.HandleFunc("/api/currency/exchange", createCurrencyExchangeRequest).Methods("POST")
 	r.HandleFunc("/api/currency/exchange/requests", getCurrencyExchangeRequests).Methods("GET")
 	r.HandleFunc("/api/subleasing", postSubleasingRequest).Methods("POST")
-	r.HandleFunc("/api/subleasing/requests", getSubleasingRequests).Methods("GET")
+	//Stavan - This is the old one
+	//r.HandleFunc("/api/subleasing/requests", getSubleasingRequests_old).Methods("GET")
 	r.HandleFunc("/api/getMarketplaceListings", getMarketplaceListings).Methods("GET")
 	r.HandleFunc("/api/postMarketplaceListing", postMarketplaceListing).Methods("POST")
 	r.HandleFunc("/api/user/activities", getUserActivities).Methods("GET")
-	// 3 API Added by Stavan 20th April
+	// 4 API Added by Stavan 20th April
 	r.HandleFunc("/api/getCurrencyExchangeListings", getCurrencyExchangeListings).Methods("GET")
 	r.HandleFunc("/api/updateUserProfile/{id}", updateUserProfile).Methods("POST")
 	r.HandleFunc("/api/getUserProfile/{id}", getUserProfile).Methods("GET")
+	r.HandleFunc("/api/getSubleasingRequests", getSubleasingRequests).Methods("GET")
 
 	// Enable CORS
 	c := cors.New(cors.Options{

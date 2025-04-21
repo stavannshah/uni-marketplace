@@ -1,147 +1,88 @@
-# Sprint3.md
+# Sprint4.md
 ---
 
 **Team Name**: University Student Marketplace Development Team  
-**Sprint Duration**: March 04 – March 25, 2025  
+**Sprint Duration**: March 26 – April 21, 2025  
 
 **Contributors**:  
 - **Frontend Engineers**: Stavan Shah, Priyanshu Mathur  
 - **Backend Engineers**: Ahmed Ali Syed, Vedant Upganlawar  
 
-**Frontend video link**: [Frontend Video](https://drive.google.com/file/d/1HIQ18L5P2qMrvm67LawSVOI-fj5Tqde7/view?usp=sharing)
-**Backend video link**: [[Backend Video](https://drive.google.com/file/d/1ZbGyzHbKQGwsXm7g2FBn6QCg6JRxgzH7/view?usp=sharing)]  
-**GitHub Link**: [https://github.com/stavannshah/uni-marketplace/edit/main/Sprint3.md]  
-
-## Sprint 3 Report  
-
-### Work Completed in Sprint 3  
-1. **User ID Functionality Integration**  
-   - Implemented a `userid` functionality to recognize users upon login, which allows for a seamless user experience.
-   - Every API request is now personalized by requiring only the `userid`, reducing the risk of unauthorized access and improving database query efficiency.
-   - Backend authentication logic was updated to ensure that only valid `userid` values are processed for user-specific operations.
-
-2. **Item Listing Tab Implementation**  
-   - Developed and connected the backend API to retrieve and display all marketplace item listings.
-   - Implemented an optimized UI featuring a sleek card-based interface to enhance readability and accessibility.
-   - Added a "Create Listing" button, allowing users to post new listings.
-   - Any new listing is stored in the backend database and immediately reflected on the frontend without requiring a page refresh.
-   - Two APIs were created to support this functionality:
-     - **GET /api/user/listings**: Retrieves all listings associated with the authenticated user.
-     - **POST /api/user/listing**: Enables users to create new listings, storing details such as title, description, category, price, condition, location, and images.
-
-3. **Home Page UI Enhancements**  
-   - The homepage was redesigned to prominently display "User Listings," i.e., the listings a user has created.
-   - Implemented real-time updates so that any new listings appear immediately without needing to refresh the page.
-   - Improved UI elements for a cleaner and more intuitive experience.
-   
-4. **Unit Testing for Frontend and Backend**  
-   - Developed and executed unit tests to validate the robustness of both frontend and backend implementations.
-   - Ensured that API responses are correctly processed and displayed on the UI.
-   - Verified that user interactions (such as creating listings) work without errors and persist data correctly.
-
-5. **Updated Backend API Documentation**  
-   - We updated the documentation of the API by adding the Currency Exchange and User Activities API.  
-   - **API Endpoint Documentation**: [[API Documentation](https://documenter.getpostman.com/view/42795112/2sAYdiopTw)]
-   - **Acceptance Criteria**:  
-     - API documentation includes request/response structures.  
-     - API endpoints are clearly defined in below "API Endpoints Documentation" section.
-
-6. **Development of `getUserActivities` Function**  
-   - Implemented the `getUserActivities` API to retrieve a user's activities from three collections: `marketplace_listings`, `currency_exchange_requests`, and `subleasing_requests`.
-   - Ensured that the API accepts a `user_id` query parameter and returns aggregated data on marketplace listings, currency exchange requests, and subleasing requests.
-   - Handled errors and returned appropriate responses if any data retrieval failed from the database.
-
-7. **Development of `getCurrencyExchangeRequests` Function**  
-   - Implemented the `getCurrencyExchangeRequests` API to fetch all currency exchange requests from the `currency_exchange_requests` collection.
-   - Included response data that consists of the total count of requests and the details of each request.
-   - Handled potential errors and provided meaningful error messages in case of failure.
-
-8. **Integration of New Routes in Main Router**  
-   - Added the newly developed APIs (`/api/user/activities` and `/api/currency/exchange/requests`) to the main router to enable access to user activities and currency exchange request data.
-   - Ensured proper routing and error handling in the backend.
-
-9. **Test for `getUserActivities` API**  
-   - Implemented a test for the `getUserActivities` API, which verifies the ability to fetch user activities from the database based on the `user_id`.
-   - Created a mock database collection for marketplace listings, simulating the insertion of a test user listing.
-   - The test ensures that the API correctly returns a 200 HTTP status and retrieves user activities.
-
-10. **Test for `getCurrencyExchangeRequests` API**  
-    - Developed a test for the `getCurrencyExchangeRequests` API, verifying that the API correctly retrieves currency exchange requests from the database.
-    - Ensured that the API responds with the correct status and data format when valid requests are made.
-    - The test also checks for appropriate error handling when issues arise during data retrieval.
----
-
-## Future Work  
-1. **User Profile Functionalities**  
-   - Introduce user profiles where users can store their preferences.
-   - Enable the homepage to display personalized content based on user preferences.
-   
-2. **UI for Remaining Listing Tabs**  
-   - Design and implement UI for the remaining two listing tabs.
+**Overall Pitch video link**: [Overall Pitch Demo]()  
+**GitHub Link**: [https://github.com/stavannshah/uni-marketplace](https://github.com/stavannshah/uni-marketplace)
 
 ---
 
-## Frontend Unit Tests  
-1. **TestUserLogin**  
-   - Verifies that users can log in and obtain the correct `userid`.
-2. **TestItemListingDisplay**  
-   - Checks if all user listings are correctly retrieved and displayed.
-3. **TestCreateListingButton**  
-   - Ensures that clicking the "Create Listing" button triggers the correct API call.
-4. **TestHomepageRendering**  
-   - Validates that user listings appear dynamically on the homepage.
-5. **DisplaysItemListingsCorrectly**  
-   - Verifies that the item listing component correctly fetches and displays item data including title, category, description, and price.
-6. **OpensListingFormDialog**  
-   - Checks that clicking the "Create Listing" button opens the new listing form dialog.
-7. **RendersButtonWithCorrectText**  
-   - Ensures the button renders and displays the correct child text content.
-8. **CallsOnClickHandlerWhenClicked**  
-   - Verifies that the `onClick` callback is called when the button is clicked.
-9. **AppliesAdditionalClassNameWhenProvided**  
-   - Checks that custom class names are applied to the button in addition to default styles.
-10. **RendersChildrenCorrectly**  
-   - Verifies that the `Card` component correctly renders its child content.
+## Sprint 4 Report
 
+### Work Completed in Sprint 4  
+
+1. **User Profile Page Implementation**  
+   - Implemented `GET /api/getUserProfile/{id}` to retrieve profile information (name, email, preferences, etc.).  
+   - Implemented `POST /api/updateUserProfile/{id}` to allow updates to name, preferred email, preferences, and location.  
+   - Connected these APIs to the new frontend profile page for real-time updates.
+
+2. **Delete Listing Feature**  
+   - Added `DELETE /api/deleteListing/{id}` endpoint to remove listings from `marketplace_listings`, `currency_exchange_requests`, or `subleasing_requests`.  
+   - Ensured clean error handling and consistent response formats for deleted and non-existent entries.
+
+3. **Additional Backend Endpoints**  
+   - Developed `GET /api/getCurrencyExchangeListings` to return all exchange listings.  
+   - Developed `GET /api/getSubleasingRequests` to return all subleasing listings.  
+   - Integrated these endpoints into frontend listing tabs.
+
+4. **Frontend Enhancements**  
+   - Designed and integrated a responsive user profile page.  
+   - Added real-time data update features and confirmation prompts.  
+   - Updated listing tabs to show newly supported listing types.
+
+5. **Router and CORS Configuration**  
+   - Updated `main.go` to route new endpoints.  
+   - Updated CORS settings to support multiple local environments.
+
+6. **Backend Refactoring & Validation**  
+   - Improved validation of `ObjectID` parameters in profile and delete APIs.  
+   - Used timeouts in MongoDB context for better performance and control.  
+   - Standardized error responses for consistency across endpoints.
+
+---
+
+## Frontend Unit and Cypress Tests  
+
+1. **TestUserProfileFetch** – ensures correct data displays after `GET /getUserProfile`.  
+2. **TestUserProfileUpdateForm** – validates successful update and re-render of profile info.  
+3. **TestDeleteListing** – tests delete button behavior and removal from DOM.  
+4. **TestCurrencyExchangeTabRendering** – confirms listing cards show exchange data.  
+5. **TestSubleasingTabRendering** – validates tab populates with subleasing info.  
 
 ---
 
 ## Backend Unit Tests  
-1. **TestUserIDRecognition**  
-   - Confirms that the system correctly identifies users based on `user_id`.
 
-2. **TestGetUserActivitiesAPI**  
-   - Ensures that `GET /api/user/activities` retrieves the correct user activities, including marketplace listings, currency exchange requests, and subleasing requests.
-
-3. **TestMarketplaceListingsQuery**  
-   - Verifies that the marketplace listings are correctly queried from the database based on `user_id`.
-
-4. **TestCurrencyExchangeRequestsQuery**  
-   - Confirms that currency exchange requests are correctly retrieved from the database based on `user_id`.
-
-5. **TestSubleasingRequestsQuery**  
-   - Validates that subleasing requests are correctly queried from the database based on `user_id`.
-
-6. **TestAggregatedUserActivities**  
-   - Ensures that the system correctly aggregates marketplace listings, currency exchange requests, and subleasing requests into a single response.
-
-7. **TestUserIDRequiredError**  
-   - Confirms that a `400 Bad Request` error is returned when `user_id` is not provided in the API request.
-
-8. **TestMongoDBConnection**  
-   - Verifies the successful connection to the test MongoDB instance.
-
-9. **TestSuccessfulAPIResponse**  
-   - Ensures that the `GET /api/user/activities` endpoint returns a successful `200 OK` response with correct JSON payload.
-
-10. **TestDatabaseInsertion**  
-    - Checks that marketplace listings are correctly inserted into the database.
-
+1. **TestGetUserProfile** – verifies profile is fetched by valid ID.  
+2. **TestUpdateUserProfile** – checks MongoDB updates for editable fields.  
+3. **TestDeleteListing** – tests success, failure (not found), and invalid ID cases.  
+4. **TestGetCurrencyExchangeListings** – confirms listings retrieval with correct format.  
+5. **TestGetSubleasingRequests** – validates all subleases are returned with 200 response.  
+6. **TestInvalidObjectIDHandling** – tests graceful error for invalid hex IDs.  
+7. **TestProfileAPIsEdgeCases** – simulates missing fields or partial updates.  
 
 ---
 
-## Next Steps for Sprint 4  
-1. Implement user profile preferences for personalized UI.  
-2. Develop UI for remaining listing tabs.  
-3. Conduct performance optimization and security enhancements.  
+## Updated Documentation for Backend API  
+
+API Documentation: [https://documenter.getpostman.com/view/42795112/2sAYdiopTw](https://documenter.getpostman.com/view/42795112/2sAYdiopTw)  
+
+### Newly Added Routes  
+- `GET /api/getUserProfile/{id}`  
+- `POST /api/updateUserProfile/{id}`  
+- `DELETE /api/deleteListing/{id}`  
+- `GET /api/getCurrencyExchangeListings`  
+- `GET /api/getSubleasingRequests`
+
+Includes:  
+- Sample requests/responses  
+- Status code definitions  
+- Parameter validation rules  
+
 

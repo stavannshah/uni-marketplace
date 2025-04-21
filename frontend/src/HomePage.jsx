@@ -41,7 +41,7 @@ const UserActivitiesSection = () => {
         setActivities({
           marketplace: data.marketplace_listings || [],
           currency: data.currency_exchange_requests || [],
-          subleasing: data.subleasingRequests || [],
+          subleasing: data.subleasing_requests || [],
         });
       } catch (error) {
         console.error("Error fetching activities:", error);
@@ -97,7 +97,7 @@ const UserActivitiesSection = () => {
     }
   };
 
-  const renderActivitySection = (title, items, fields) => (
+  const renderActivitySection = (title, items, fields, fieldMap = {}) => (
     <Box sx={{ mb: 4, backgroundColor: "#FAF9F6" }}>
       <Box sx={{ bgcolor: "#FA4616", px: 2, py: 1, borderRadius: 1, mb: 2 }}>
         <Typography variant="h5" sx={{ color: "white", m: 0 }}>
@@ -121,11 +121,18 @@ const UserActivitiesSection = () => {
           <TableBody>
             {items.map((item, index) => (
               <TableRow key={index}>
-                {fields.map((field) => (
-                  <TableCell key={field}>
-                    {item[field.toLowerCase()] || "N/A"}
-                  </TableCell>
-                ))}
+                {fields.map((field) => {
+                  const key = fieldMap[field] || field.toLowerCase();
+                  return <TableCell key={field}>
+                  {typeof item[key] === "object" && item[key] !== null
+                    ? field === "Location"
+                      ? `${item[key].city}, ${item[key].state}, ${item[key].country}`
+                      : field === "Period"
+                        ? `${new Date(item[key].start_date).toLocaleDateString()} - ${new Date(item[key].end_date).toLocaleDateString()}`
+                        : "N/A"
+                    : item[key] || "N/A"}
+                </TableCell>;
+                })}
                 <TableCell>
                   <Button
                     variant="outlined"
@@ -142,6 +149,7 @@ const UserActivitiesSection = () => {
       )}
     </Box>
   );
+  
 
   if (loading) {
     return <CircularProgress sx={{ mt: 4 }} />;
@@ -157,10 +165,15 @@ const UserActivitiesSection = () => {
       ])}
 
       {renderActivitySection(
-        "Active Currency Exchange Listings",
-        activities.currency,
-        ["Amount", "FromCurrency", "ToCurrency", "RequestDate"]
-      )}
+  "Active Currency Exchange Listings",
+  activities.currency,
+  ["Amount", "FromCurrency", "ToCurrency", "RequestDate"],
+  {
+    FromCurrency: "from_currency",
+    ToCurrency: "to_currency",
+    RequestDate: "request_date",
+  }
+)}
 
       {renderActivitySection("Active Sub Leasing Listings", activities.subleasing, [
         "Title",

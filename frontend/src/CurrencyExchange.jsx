@@ -42,7 +42,7 @@ const CurrencyExchangeListing = () => {
       const userID = localStorage.getItem("userID");
       if (!userID) throw new Error("User not authenticated");
 
-      const response = await fetch("http://localhost:8080/api/postCurrencyListing", {
+      const response = await fetch("http://localhost:8080/api/currency/exchange", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, user_id: userID, amount: parseFloat(formData.amount) })
@@ -50,7 +50,7 @@ const CurrencyExchangeListing = () => {
 
       if (!response.ok) throw new Error("Submission failed");
 
-      const updated = await fetch("http://localhost:8080/api/getCurrencyListings");
+      const updated = await fetch("http://localhost:8080/api/getCurrencyExchangeListings");
       const data = await updated.json();
       alert("Listing posted successfully.");
       setListings(data.listings);

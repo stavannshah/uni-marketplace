@@ -55,7 +55,7 @@ const SubLeasingListing = () => {
       const userID = localStorage.getItem("userID");
       if (!userID) throw new Error("User not authenticated");
 
-      const response = await fetch("http://localhost:8080/api/postSubleasingRequest", {
+      const response = await fetch("http://localhost:8080/api/subleasing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

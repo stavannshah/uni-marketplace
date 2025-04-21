@@ -34,13 +34,13 @@ type User struct {
 
 type MarketplaceListing struct {
 	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	UserID      string   `json:"user_id" bson:"user_id"`
-	Title       string   `json:"title" bson:"title"`
-	Pictures    []string `json:"pictures" bson:"pictures"`
-	Description string   `json:"description" bson:"description"`
-	Category    string   `json:"category" bson:"category"`
-	Price       float64  `json:"price" bson:"price"`
-	Condition   string   `json:"condition" bson:"condition"`
+	UserID      string             `json:"user_id" bson:"user_id"`
+	Title       string             `json:"title" bson:"title"`
+	Pictures    []string           `json:"pictures" bson:"pictures"`
+	Description string             `json:"description" bson:"description"`
+	Category    string             `json:"category" bson:"category"`
+	Price       float64            `json:"price" bson:"price"`
+	Condition   string             `json:"condition" bson:"condition"`
 	Location    struct {
 		City    string `json:"city" bson:"city"`
 		State   string `json:"state" bson:"state"`
@@ -50,19 +50,19 @@ type MarketplaceListing struct {
 }
 
 type CurrencyExchangeRequest struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	UserID       string    `json:"user_id" bson:"user_id"`
-	Amount       float64   `json:"amount" bson:"amount"`
-	FromCurrency string    `json:"from_currency" bson:"from_currency"`
-	ToCurrency   string    `json:"to_currency" bson:"to_currency"`
-	RequestDate  time.Time `json:"request_date" bson:"request_date"`
+	ID           primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	UserID       string             `json:"user_id" bson:"user_id"`
+	Amount       float64            `json:"amount" bson:"amount"`
+	FromCurrency string             `json:"from_currency" bson:"from_currency"`
+	ToCurrency   string             `json:"to_currency" bson:"to_currency"`
+	RequestDate  time.Time          `json:"request_date" bson:"request_date"`
 }
 
 type SubleasingRequest struct {
 	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
-	UserID      string `json:"user_id" bson:"user_id"`
-	Title       string `json:"title" bson:"title"`
-	Description string `json:"description" bson:"description"`
+	UserID      string             `json:"user_id" bson:"user_id"`
+	Title       string             `json:"title" bson:"title"`
+	Description string             `json:"description" bson:"description"`
 	Location    struct {
 		City    string `json:"city" bson:"city"`
 		State   string `json:"state" bson:"state"`
@@ -377,52 +377,52 @@ func getCurrencyExchangeListings(w http.ResponseWriter, r *http.Request) {
 }
 
 func createCurrencyExchangeRequest(w http.ResponseWriter, r *http.Request) {
-    origin := r.Header.Get("Origin")
-    w.Header().Set("Content-Type", "application/json")
-    w.Header().Set("Access-Control-Allow-Origin", origin)
-    w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-    w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	origin := r.Header.Get("Origin")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-    // Handle preflight request
-    if r.Method == "OPTIONS" {
-        w.WriteHeader(http.StatusOK)
-        return
-    }
+	// Handle preflight request
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
-    var request CurrencyExchangeRequest
+	var request CurrencyExchangeRequest
 
-    // Decode incoming JSON body into the struct
-    err := json.NewDecoder(r.Body).Decode(&request)
-    if err != nil {
-        http.Error(w, "Invalid request body", http.StatusBadRequest)
-        return
-    }
+	// Decode incoming JSON body into the struct
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
-    // Validate required fields
-    if request.UserID == "" || request.FromCurrency == "" || request.ToCurrency == "" || request.Amount <= 0 {
-        w.WriteHeader(http.StatusBadRequest)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Missing or invalid fields"})
-        return
-    }
+	// Validate required fields
+	if request.UserID == "" || request.FromCurrency == "" || request.ToCurrency == "" || request.Amount <= 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Missing or invalid fields"})
+		return
+	}
 
-    // Set server-side value
-    request.RequestDate = time.Now()
+	// Set server-side value
+	request.RequestDate = time.Now()
 
-    collection := client.Database("uni_marketplace").Collection("currency_exchange_requests")
+	collection := client.Database("uni_marketplace").Collection("currency_exchange_requests")
 
-    // Attempt to insert into MongoDB
-    result, err := collection.InsertOne(context.Background(), request)
-    if err != nil {
-        log.Printf("Database error: %v\n", err)
-        w.WriteHeader(http.StatusInternalServerError)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create currency exchange request"})
-        return
-    }
+	// Attempt to insert into MongoDB
+	result, err := collection.InsertOne(context.Background(), request)
+	if err != nil {
+		log.Printf("Database error: %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create currency exchange request"})
+		return
+	}
 
-    log.Printf("Successfully inserted currency exchange with ID: %v\n", result.InsertedID)
+	log.Printf("Successfully inserted currency exchange with ID: %v\n", result.InsertedID)
 
-    w.WriteHeader(http.StatusCreated)
-    json.NewEncoder(w).Encode(request)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(request)
 }
 
 func getCurrencyExchangeRequests(w http.ResponseWriter, r *http.Request) {
@@ -456,67 +456,66 @@ func getCurrencyExchangeRequests(w http.ResponseWriter, r *http.Request) {
 }
 
 func postSubleasingRequest(w http.ResponseWriter, r *http.Request) {
-    origin := r.Header.Get("Origin")
-    w.Header().Set("Content-Type", "application/json")
-    w.Header().Set("Access-Control-Allow-Origin", origin)
-    w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
-    w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	origin := r.Header.Get("Origin")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", origin)
+	w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-    // Handle preflight request
-    if r.Method == "OPTIONS" {
-        w.WriteHeader(http.StatusOK)
-        return
-    }
+	// Handle preflight request
+	if r.Method == "OPTIONS" {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
 
-    var sublease SubleasingRequest
+	var sublease SubleasingRequest
 
-    // Decode request body
-    err := json.NewDecoder(r.Body).Decode(&sublease)
-    if err != nil {
-        http.Error(w, "Invalid request body", http.StatusBadRequest)
-        return
-    }
+	// Decode request body
+	err := json.NewDecoder(r.Body).Decode(&sublease)
+	if err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
-    // Validate required fields
-    if sublease.UserID == "" || sublease.Title == "" || sublease.Description == "" || sublease.Rent <= 0 {
-        w.WriteHeader(http.StatusBadRequest)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Missing or invalid fields"})
-        return
-    }
+	// Validate required fields
+	if sublease.UserID == "" || sublease.Title == "" || sublease.Description == "" || sublease.Rent <= 0 {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Missing or invalid fields"})
+		return
+	}
 
-    // Validate nested fields
-    if sublease.Location.City == "" || sublease.Location.State == "" || sublease.Location.Country == "" {
-        w.WriteHeader(http.StatusBadRequest)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Incomplete location info"})
-        return
-    }
+	// Validate nested fields
+	if sublease.Location.City == "" || sublease.Location.State == "" || sublease.Location.Country == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Incomplete location info"})
+		return
+	}
 
-    if sublease.Period.StartDate.IsZero() || sublease.Period.EndDate.IsZero() {
-        w.WriteHeader(http.StatusBadRequest)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Missing rental period"})
-        return
-    }
+	if sublease.Period.StartDate.IsZero() || sublease.Period.EndDate.IsZero() {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Missing rental period"})
+		return
+	}
 
-    // Set server-side values
-    sublease.DatePosted = time.Now()
+	// Set server-side values
+	sublease.DatePosted = time.Now()
 
-    collection := client.Database("uni_marketplace").Collection("subleasing_requests")
+	collection := client.Database("uni_marketplace").Collection("subleasing_requests")
 
-    // Insert into MongoDB
-    result, err := collection.InsertOne(context.Background(), sublease)
-    if err != nil {
-        log.Printf("Database error: %v\n", err)
-        w.WriteHeader(http.StatusInternalServerError)
-        json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create sublease listing"})
-        return
-    }
+	// Insert into MongoDB
+	result, err := collection.InsertOne(context.Background(), sublease)
+	if err != nil {
+		log.Printf("Database error: %v\n", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create sublease listing"})
+		return
+	}
 
-    log.Printf("Successfully inserted sublease with ID: %v\n", result.InsertedID)
+	log.Printf("Successfully inserted sublease with ID: %v\n", result.InsertedID)
 
-    w.WriteHeader(http.StatusCreated)
-    json.NewEncoder(w).Encode(sublease)
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(sublease)
 }
-
 
 // SS April 20 - Renaming this to old and updating new api below this
 func getSubleasingRequests_old(w http.ResponseWriter, r *http.Request) {
@@ -594,7 +593,7 @@ func deleteListing(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// You can use a common deletion if you pass a `type` param too (optional improvement)
+	// You can use a common deletion if you pass a `type` param too
 	collections := []string{"marketplace_listings", "currency_exchange_requests", "subleasing_requests"}
 
 	for _, coll := range collections {
@@ -609,7 +608,6 @@ func deleteListing(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	json.NewEncoder(w).Encode(map[string]string{"error": "Listing not found"})
 }
-
 
 func getUserActivities(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

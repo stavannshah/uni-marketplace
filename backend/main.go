@@ -33,6 +33,7 @@ type User struct {
 }
 
 type MarketplaceListing struct {
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID      string   `json:"user_id" bson:"user_id"`
 	Title       string   `json:"title" bson:"title"`
 	Pictures    []string `json:"pictures" bson:"pictures"`
@@ -49,6 +50,7 @@ type MarketplaceListing struct {
 }
 
 type CurrencyExchangeRequest struct {
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID       string    `json:"user_id" bson:"user_id"`
 	Amount       float64   `json:"amount" bson:"amount"`
 	FromCurrency string    `json:"from_currency" bson:"from_currency"`
@@ -57,6 +59,7 @@ type CurrencyExchangeRequest struct {
 }
 
 type SubleasingRequest struct {
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
 	UserID      string `json:"user_id" bson:"user_id"`
 	Title       string `json:"title" bson:"title"`
 	Description string `json:"description" bson:"description"`
@@ -581,6 +584,33 @@ func getSubleasingRequests(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func deleteListing(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		http.Error(w, "Invalid ID format", http.StatusBadRequest)
+		return
+	}
+
+	// You can use a common deletion if you pass a `type` param too (optional improvement)
+	collections := []string{"marketplace_listings", "currency_exchange_requests", "subleasing_requests"}
+
+	for _, coll := range collections {
+		collection := client.Database("uni_marketplace").Collection(coll)
+		result, err := collection.DeleteOne(context.Background(), bson.M{"_id": objID})
+		if err == nil && result.DeletedCount > 0 {
+			json.NewEncoder(w).Encode(map[string]string{"message": "Listing deleted successfully", "collection": coll})
+			return
+		}
+	}
+
+	w.WriteHeader(http.StatusNotFound)
+	json.NewEncoder(w).Encode(map[string]string{"error": "Listing not found"})
+}
+
+
 func getUserActivities(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	userID := r.URL.Query().Get("user_id")
@@ -662,6 +692,8 @@ func main() {
 	r.HandleFunc("/api/updateUserProfile/{id}", updateUserProfile).Methods("POST")
 	r.HandleFunc("/api/getUserProfile/{id}", getUserProfile).Methods("GET")
 	r.HandleFunc("/api/getSubleasingRequests", getSubleasingRequests).Methods("GET")
+	//Adding the DELETE API
+	r.HandleFunc("/api/deleteListing/{id}", deleteListing).Methods("DELETE")
 
 	// Enable CORS
 	c := cors.New(cors.Options{

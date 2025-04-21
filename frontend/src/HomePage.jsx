@@ -73,13 +73,30 @@ const UserActivitiesSection = () => {
 
   const handleDelete = async () => {
     try {
-      await fetch(`http://localhost:8080/api/deleteListing/${editItem.id}`, {
+      const response = await fetch(`http://localhost:8080/api/deleteListing/${editItem.id}`, {
         method: "DELETE",
       });
+  
+      if (!response.ok) throw new Error("Delete failed");
+  
       alert("Listing deleted!");
+  
+      // Close dialog
       setIsDialogOpen(false);
+  
+      // Optimistically update UI
+      setActivities((prev) => {
+        const filterOut = (arr) => arr.filter(item => item.id !== editItem.id);
+        return {
+          marketplace: filterOut(prev.marketplace),
+          currency: filterOut(prev.currency),
+          subleasing: filterOut(prev.subleasing),
+        };
+      });
+  
     } catch (err) {
       alert("Failed to delete.");
+      console.error(err);
     }
   };
 

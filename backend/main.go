@@ -374,21 +374,52 @@ func getCurrencyExchangeListings(w http.ResponseWriter, r *http.Request) {
 }
 
 func createCurrencyExchangeRequest(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	var request CurrencyExchangeRequest
-	json.NewDecoder(r.Body).Decode(&request)
-	request.RequestDate = time.Now()
+    origin := r.Header.Get("Origin")
+    w.Header().Set("Content-Type", "application/json")
+    w.Header().Set("Access-Control-Allow-Origin", origin)
+    w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+    w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	collection := client.Database("uni_marketplace").Collection("currency_exchange_requests")
-	_, err := collection.InsertOne(context.TODO(), request)
-	if err != nil {
-		log.Fatal(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create currency exchange request"})
-		return
-	}
+    // Handle preflight request
+    if r.Method == "OPTIONS" {
+        w.WriteHeader(http.StatusOK)
+        return
+    }
 
-	json.NewEncoder(w).Encode(request)
+    var request CurrencyExchangeRequest
+
+    // Decode incoming JSON body into the struct
+    err := json.NewDecoder(r.Body).Decode(&request)
+    if err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
+
+    // Validate required fields
+    if request.UserID == "" || request.FromCurrency == "" || request.ToCurrency == "" || request.Amount <= 0 {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"error": "Missing or invalid fields"})
+        return
+    }
+
+    // Set server-side value
+    request.RequestDate = time.Now()
+
+    collection := client.Database("uni_marketplace").Collection("currency_exchange_requests")
+
+    // Attempt to insert into MongoDB
+    result, err := collection.InsertOne(context.Background(), request)
+    if err != nil {
+        log.Printf("Database error: %v\n", err)
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create currency exchange request"})
+        return
+    }
+
+    log.Printf("Successfully inserted currency exchange with ID: %v\n", result.InsertedID)
+
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(request)
 }
 
 func getCurrencyExchangeRequests(w http.ResponseWriter, r *http.Request) {
@@ -422,22 +453,67 @@ func getCurrencyExchangeRequests(w http.ResponseWriter, r *http.Request) {
 }
 
 func postSubleasingRequest(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	var sublease SubleasingRequest
-	json.NewDecoder(r.Body).Decode(&sublease)
-	sublease.DatePosted = time.Now()
+    origin := r.Header.Get("Origin")
+    w.Header().Set("Content-Type", "application/json")
+    w.Header().Set("Access-Control-Allow-Origin", origin)
+    w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS")
+    w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
-	collection := client.Database("uni_marketplace").Collection("subleasing_requests")
-	_, err := collection.InsertOne(context.TODO(), sublease)
-	if err != nil {
-		log.Fatal(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to post subleasing request"})
-		return
-	}
+    // Handle preflight request
+    if r.Method == "OPTIONS" {
+        w.WriteHeader(http.StatusOK)
+        return
+    }
 
-	json.NewEncoder(w).Encode(sublease)
+    var sublease SubleasingRequest
+
+    // Decode request body
+    err := json.NewDecoder(r.Body).Decode(&sublease)
+    if err != nil {
+        http.Error(w, "Invalid request body", http.StatusBadRequest)
+        return
+    }
+
+    // Validate required fields
+    if sublease.UserID == "" || sublease.Title == "" || sublease.Description == "" || sublease.Rent <= 0 {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"error": "Missing or invalid fields"})
+        return
+    }
+
+    // Validate nested fields
+    if sublease.Location.City == "" || sublease.Location.State == "" || sublease.Location.Country == "" {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"error": "Incomplete location info"})
+        return
+    }
+
+    if sublease.Period.StartDate.IsZero() || sublease.Period.EndDate.IsZero() {
+        w.WriteHeader(http.StatusBadRequest)
+        json.NewEncoder(w).Encode(map[string]string{"error": "Missing rental period"})
+        return
+    }
+
+    // Set server-side values
+    sublease.DatePosted = time.Now()
+
+    collection := client.Database("uni_marketplace").Collection("subleasing_requests")
+
+    // Insert into MongoDB
+    result, err := collection.InsertOne(context.Background(), sublease)
+    if err != nil {
+        log.Printf("Database error: %v\n", err)
+        w.WriteHeader(http.StatusInternalServerError)
+        json.NewEncoder(w).Encode(map[string]string{"error": "Failed to create sublease listing"})
+        return
+    }
+
+    log.Printf("Successfully inserted sublease with ID: %v\n", result.InsertedID)
+
+    w.WriteHeader(http.StatusCreated)
+    json.NewEncoder(w).Encode(sublease)
 }
+
 
 // SS April 20 - Renaming this to old and updating new api below this
 func getSubleasingRequests_old(w http.ResponseWriter, r *http.Request) {

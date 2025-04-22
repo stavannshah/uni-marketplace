@@ -49,11 +49,18 @@
 
 ## Frontend Unit and Cypress Tests  
 
-1. **TestUserProfileFetch** – ensures correct data displays after `GET /getUserProfile`.  
-2. **TestUserProfileUpdateForm** – validates successful update and re-render of profile info.  
-3. **TestDeleteListing** – tests delete button behavior and removal from DOM.  
-4. **TestCurrencyExchangeTabRendering** – confirms listing cards show exchange data.  
-5. **TestSubleasingTabRendering** – validates tab populates with subleasing info.  
+We test the following components:
+
+| Component | Test File | Description |
+|-----------|-----------|-------------|
+| App | `App.test.jsx` | Tests login state management and basic app flow |
+| ItemListing | `ItemListing.test.jsx` | Tests marketplace listing display and creation |
+| CurrencyExchange | `CurrencyExchange.test.jsx` | Tests currency exchange listing display and creation |
+| SubLeasing | `SubLeasing.test.jsx` | Tests subleasing listing display and creation |
+| UserActivities | `HomePage.test.jsx` | Tests user activities section on homepage |
+| UserProfile | `UserProfile.test.jsx` | Tests user profile editing functionality |
+| Button | `components/ui/Button.test.jsx` | Tests reusable button component |
+| Card | `components/ui/Card.test.jsx` | Tests reusable card component |
 
 ---
 

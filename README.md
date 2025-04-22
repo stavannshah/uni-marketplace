@@ -95,7 +95,7 @@ All major actions (create, edit, delete, login, logout) are covered with test sc
 
 ## 📸 Screenshot
 
-![UniMarketplace Screenshot](./Screenshot%202025-04-21%20194852.jpg)
+![UniMarketplace Homepage Screenshot]([./Screenshot%202025-04-21%20194852.jpg](https://github.com/stavannshah/uni-marketplace/blob/main/homepage.png))
 
 ---
 

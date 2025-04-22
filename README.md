@@ -101,6 +101,15 @@ All major actions (create, edit, delete, login, logout) are covered with test sc
 
 ## 🚀 How to Run the Project
 
+### Frontend (Reactjs)
+
+```bash
+# Step into the backend directory (if applicable)
+cd frontend/
+
+npm install
+npm run dev
+
 ### Backend (Golang)
 
 ```bash

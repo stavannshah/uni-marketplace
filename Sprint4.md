@@ -47,7 +47,7 @@
 
 ---
 
-## Frontend Unit and Cypress Tests  
+## Frontend Unit Tests  
 
 We test the following components:
 
